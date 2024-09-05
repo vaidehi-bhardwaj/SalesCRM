@@ -30,13 +30,13 @@ export const companyFormConfig = [
       name: "Lead Assigned to",
       label: "Lead Assigned to",
       type: "select",
-      options: "userOptions",
+      options: "leadAssignedToOptions",
     },
   ],
   [
     { name: "Website", label: "Website", type: "url", required: true },
     { name: "Generic phone 1", label: "Generic phone 1", type: "tel" },
-    { name: "BDM", label: "BDM", type: "select", options: "userOptions" },
+    { name: "BDM", label: "BDM", type: "select", options: "bdmOptions" },
   ],
   [
     { name: "Address", label: "Address", type: "text", required: true },

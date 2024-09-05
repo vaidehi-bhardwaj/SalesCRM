@@ -73,8 +73,16 @@ const CreateLeads = () => {
   useEffect(() => {
     const fetchOptions = async () => {
       try {
-        const response = await axios.get("http://localhost:8080/api/options");
-        setOptions(response.data);
+        const [optionsResponse, userNamesResponse] = await Promise.all([
+          axios.get("http://localhost:8080/api/options"),
+          axios.get("http://localhost:8080/api/users"),
+        ]);
+        setOptions((prevOptions) => ({
+          ...prevOptions,
+          ...optionsResponse.data,
+          bdmOptions: userNamesResponse.data,
+          leadAssignedToOptions: userNamesResponse.data,
+        }));
       } catch (error) {
         console.error("Error fetching options", error);
       }

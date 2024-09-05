@@ -7,7 +7,7 @@ const OptionsRouter = require("./Routes/OptionsRouter");
 const Lead = require("./Models/createLeads");
 const multer = require("multer");
 const upload = multer();
-
+const User = require("./Models/User"); 
 // CORS configuration
 const corsOptions = {
   origin: "http://localhost:3000",
@@ -138,6 +138,22 @@ app.get("/api/leads", async (req, res) => {
   }
 });
 
+app.get("/api/users", async (req, res) => {
+  try {
+    const users = await User.find({}, { name: 1, _id: 0 });
+    const userNames = users.map((user) => user.name);
+    res.json(userNames);
+  } catch (error) {
+    console.error("Error fetching user names:", error);
+    res.status(500).json({
+      success: false,
+      error: "Error fetching user names",
+      details: error.message,
+    });
+  }
+});
+
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
+
