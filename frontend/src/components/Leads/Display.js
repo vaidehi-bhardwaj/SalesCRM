@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import LeadDetails from "./LeadDetails";
+import "./Display.css"
 
 const Display = () => {
   const [leads, setLeads] = useState([]);

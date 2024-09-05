@@ -1,13 +1,20 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
+import {
+  companyFormConfig,
+  contactFormConfig,
+  itLandscapeConfig,
+} from "../CreateLeads/formConfigs";
+import "./LeadDetails.css";
 
 const LeadDetails = ({ leadNumber, onClose }) => {
   const [lead, setLead] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [editMode, setEditMode] = useState(false);
-  const [editedLead, setEditedLead] = useState(null);
+  const [editedLead, setEditedLead] = useState({});
   const [newDescription, setNewDescription] = useState("");
+  const [options, setOptions] = useState({});
 
   useEffect(() => {
     const fetchLeadDetails = async () => {
@@ -29,22 +36,46 @@ const LeadDetails = ({ leadNumber, onClose }) => {
     fetchLeadDetails();
   }, [leadNumber]);
 
+  useEffect(() => {
+    const fetchOptions = async () => {
+      try {
+        const [optionsResponse, userNamesResponse] = await Promise.all([
+          axios.get("http://localhost:8080/api/options"),
+          axios.get("http://localhost:8080/api/users"),
+        ]);
+        setOptions((prevOptions) => ({
+          ...prevOptions,
+          ...optionsResponse.data,
+          bdmOptions: userNamesResponse.data,
+          leadAssignedToOptions: userNamesResponse.data,
+        }));
+      } catch (error) {
+        console.error("Error fetching options", error);
+      }
+    };
+
+    fetchOptions();
+  }, []);
+
   const handleInputChange = (e, section, subSection) => {
     const { name, value } = e.target;
     setEditedLead((prevLead) => {
-      if (!prevLead) return null;
-      return {
-        ...prevLead,
-        [section]: subSection
-          ? {
-              ...prevLead[section],
-              [subSection]: {
-                ...prevLead[section]?.[subSection],
-                [name]: value,
-              },
-            }
-          : { ...prevLead[section], [name]: value },
-      };
+      let updatedLead = { ...prevLead };
+      if (section === "itLandscape" && subSection === "SAPInstalledBase") {
+        updatedLead.itLandscape = updatedLead.itLandscape || {};
+        updatedLead.itLandscape.SAPInstalledBase =
+          updatedLead.itLandscape.SAPInstalledBase || {};
+        updatedLead.itLandscape.SAPInstalledBase[name] = value;
+      } else if (subSection) {
+        updatedLead[section] = updatedLead[section] || {};
+        updatedLead[section][subSection] =
+          updatedLead[section][subSection] || {};
+        updatedLead[section][subSection][name] = value;
+      } else {
+        updatedLead[section] = updatedLead[section] || {};
+        updatedLead[section][name] = value;
+      }
+      return updatedLead;
     });
   };
 
@@ -59,22 +90,30 @@ const LeadDetails = ({ leadNumber, onClose }) => {
       setEditedLead(response.data);
       setNewDescription("");
     } catch (err) {
-      setError(
-        err.message || "An error occurred while adding a new description"
-      );
+      setError(err.message || "An error occurred while adding a description");
     }
   };
 
   const handleSave = async () => {
     try {
+      const leadToSave = {
+        ...editedLead,
+        itLandscape: {
+          ...editedLead.itLandscape,
+          SAPInstalledBase: editedLead.itLandscape?.SAPInstalledBase || {},
+        },
+      };
+
       const response = await axios.put(
         `http://localhost:8080/api/leads/${leadNumber}`,
-        editedLead
+        leadToSave
       );
       setLead(response.data);
       setEditMode(false);
     } catch (err) {
-      setError(err.message || "An error occurred while saving changes");
+      setError(
+        err.response?.data?.error || "An error occurred while saving changes"
+      );
     }
   };
 
@@ -82,100 +121,167 @@ const LeadDetails = ({ leadNumber, onClose }) => {
   if (error) return <div>Error: {error}</div>;
   if (!lead) return <div>No lead found</div>;
 
-  return (
-    <div className="lead-details">
-      <h2>Lead Details - {lead.leadNumber}</h2>
-      <button onClick={onClose}>Close</button>
-      <button onClick={() => setEditMode(!editMode)}>
-        {editMode ? "Cancel" : "Edit"}
-      </button>
-      {editMode && <button onClick={handleSave}>Save Changes</button>}
+  const renderFields = (config, section, subSection = null) => {
+    return Array.isArray(config)
+      ? config.map((row, rowIndex) => (
+          <div className="form-row" key={rowIndex}>
+            {Array.isArray(row) &&
+              row.map((field) => (
+                <div className="form-group" key={field.name}>
+                  <label>{field.label}:</label>
+                  {field.type === "select" ? (
+                    <select
+                      name={field.name}
+                      value={
+                        subSection
+                          ? editedLead?.[section]?.[subSection]?.[field.name] ||
+                            ""
+                          : editedLead?.[section]?.[field.name] || ""
+                      }
+                      onChange={(e) =>
+                        handleInputChange(e, section, subSection)
+                      }
+                      disabled={!editMode}
+                    >
+                      <option value="">Select {field.label}</option>
+                      {options[field.options]?.map((option, index) => (
+                        <option key={index} value={option}>
+                          {option}
+                        </option>
+                      ))}
+                    </select>
+                  ) : (
+                    <input
+                      type={field.type}
+                      name={field.name}
+                      value={
+                        subSection
+                          ? editedLead?.[section]?.[subSection]?.[field.name] ||
+                            ""
+                          : editedLead?.[section]?.[field.name] || ""
+                      }
+                      onChange={(e) =>
+                        handleInputChange(e, section, subSection)
+                      }
+                      disabled={!editMode}
+                    />
+                  )}
+                </div>
+              ))}
+          </div>
+        ))
+      : null;
+  };
 
-      <h3>Company Information</h3>
-      {lead.companyInfo &&
-        Object.entries(lead.companyInfo).map(([key, value]) => (
-          <div key={key}>
-            <label>{key}:</label>
-            {editMode ? (
+const renderContactFields = (role) => {
+  const fields = [
+    "name",
+    "dlExt",
+    "designation",
+    "mobile",
+    "email",
+    "personalEmail",
+  ];
+
+  const rows = [];
+  for (let i = 0; i < fields.length; i += 3) {
+    rows.push(fields.slice(i, i + 3)); // Create rows with 3 fields each
+  }
+
+  return (
+    <div key={role} className="form-section">
+      <h4>{role.charAt(0).toUpperCase() + role.slice(1)}</h4>
+      {rows.map((row, rowIndex) => (
+        <div className="form-row" key={rowIndex}>
+          {row.map((field) => (
+            <div className="form-group" key={field}>
+              <label>{field.charAt(0).toUpperCase() + field.slice(1)}:</label>
               <input
                 type="text"
-                name={key}
-                value={editedLead?.companyInfo?.[key] || ""}
-                onChange={(e) => handleInputChange(e, "companyInfo")}
+                name={field}
+                value={editedLead?.contactInfo?.[role]?.[field] || ""}
+                onChange={(e) => handleInputChange(e, "contactInfo", role)}
+                disabled={!editMode}
               />
-            ) : (
-              <span>{value || "N/A"}</span>
-            )}
-          </div>
-        ))}
+            </div>
+          ))}
+        </div>
+      ))}
+    </div>
+  );
+};
 
-      <h3>Contact Information</h3>
-      {lead.contactInfo &&
-        Object.entries(lead.contactInfo).map(([section, details]) => (
-          <div key={section}>
-            <h4>{section}</h4>
-            {details &&
-              Object.entries(details).map(([key, value]) => (
-                <div key={key}>
-                  <label>{key}:</label>
-                  {editMode ? (
-                    <input
-                      type="text"
-                      name={key}
-                      value={editedLead?.contactInfo?.[section]?.[key] || ""}
-                      onChange={(e) =>
-                        handleInputChange(e, "contactInfo", section)
-                      }
-                    />
-                  ) : (
-                    <span>{value || "N/A"}</span>
-                  )}
-                </div>
-              ))}
-          </div>
-        ))}
+  return (
+    <div className="modal">
+      <div className="modal-content">
+        <h2>Lead Details - {lead.leadNumber}</h2>
+        <button onClick={onClose}>Close</button>
+        <button onClick={() => setEditMode(!editMode)}>
+          {editMode ? "Cancel" : "Edit"}
+        </button>
+        {editMode && <button onClick={handleSave}>Save Changes</button>}
 
-      <h3>IT Landscape</h3>
-      {lead.itLandscape &&
-        Object.entries(lead.itLandscape).map(([section, details]) => (
-          <div key={section}>
-            <h4>{section}</h4>
-            {details &&
-              Object.entries(details).map(([key, value]) => (
-                <div key={key}>
-                  <label>{key}:</label>
-                  {editMode ? (
-                    <input
-                      type="text"
-                      name={key}
-                      value={editedLead?.itLandscape?.[section]?.[key] || ""}
-                      onChange={(e) =>
-                        handleInputChange(e, "itLandscape", section)
-                      }
-                    />
-                  ) : (
-                    <span>{value || "N/A"}</span>
-                  )}
-                </div>
-              ))}
-          </div>
-        ))}
+        {/* Company Information */}
+        <section className="form-section">
+          <h3>Company Information</h3>
+          {renderFields(companyFormConfig, "companyInfo")}
+        </section>
 
-      <h3>Descriptions</h3>
-      {lead.descriptions &&
-        lead.descriptions.map((desc, index) => (
-          <div key={index}>
-            <p>{desc.description}</p>
-            <small>Added on: {new Date(desc.createdAt).toLocaleString()}</small>
+        {/* Contact Information */}
+        <section className="form-section">
+          <h3>Contact Information</h3>
+          {renderContactFields("it")}
+          {renderContactFields("finance")}
+          {renderContactFields("businessHead")}
+        </section>
+
+        {/* IT Landscape */}
+        <section className="form-section">
+          <h3>IT Landscape</h3>
+          <h4>Net New</h4>
+          {renderFields(itLandscapeConfig.netNew, "itLandscape", "netNew")}
+          <h4>SAP Installed Base</h4>
+          {renderFields(
+            itLandscapeConfig.SAPInstalledBase,
+            "itLandscape",
+            "SAPInstalledBase"
+          )}
+        </section>
+
+        {/* Descriptions */}
+        <section className="form-section">
+          <h3>Descriptions</h3>
+          <div className="form-group">
+            <label>New Description:</label>
+            <textarea
+              value={newDescription}
+              onChange={(e) => setNewDescription(e.target.value)}
+              placeholder="Add a new description"
+              disabled={!editMode}
+            />
           </div>
-        ))}
-      <div>
-        <textarea
-          value={newDescription}
-          onChange={(e) => setNewDescription(e.target.value)}
-          placeholder="Add a new description"
-        />
-        <button onClick={handleAddDescription}>Add Description</button>
+          <button onClick={handleAddDescription} disabled={!editMode}>
+            Add Description
+          </button>
+
+          <table className="descriptions-table">
+            <thead>
+              <tr>
+                <th>Description</th>
+                <th>Date</th>
+              </tr>
+            </thead>
+            <tbody>
+              {lead.descriptions &&
+                lead.descriptions.map((desc, index) => (
+                  <tr key={index}>
+                    <td>{desc.description}</td>
+                    <td>{new Date(desc.createdAt).toLocaleString()}</td>
+                  </tr>
+                ))}
+            </tbody>
+          </table>
+        </section>
       </div>
     </div>
   );

@@ -6,8 +6,8 @@ const AuthRouter = require("./Routes/AuthRouter");
 const OptionsRouter = require("./Routes/OptionsRouter");
 const Lead = require("./Models/createLeads");
 const multer = require("multer");
-const upload = multer();
-const User = require("./Models/User"); 
+const User = require("./Models/User");
+
 // CORS configuration
 const corsOptions = {
   origin: "http://localhost:3000",
@@ -21,14 +21,29 @@ require("./Models/db");
 
 const PORT = process.env.PORT || 8080;
 
-app.use(bodyParser.json());
+// Configure body-parser with a payload limit of 50MB
+app.use(bodyParser.json({ limit: "50mb" }));
+app.use(bodyParser.urlencoded({ limit: "50mb", extended: true }));
+
+// Middleware to log request size
+app.use((req, res, next) => {
+  console.log(`Request size: ${req.get("content-length")} bytes`);
+  next();
+});
+
+// Configure multer for file uploads with a limit of 50MB
+const upload = multer({
+  limits: { fileSize: 50 * 1024 * 1024 }, // 50 MB file size limit
+});
+
+// Route handlers
 app.use("/auth", AuthRouter);
-app.use(express.json());
 app.use("/api/options", OptionsRouter);
 
+// POST lead data with file upload
 app.post("/api/leads", upload.single("file"), async (req, res) => {
-  console.log("Incoming lead data:", req.body.data);
   try {
+    console.log("Incoming lead data:", req.body.data);
     const parsedData = JSON.parse(req.body.data);
     console.log("Parsed data:", JSON.stringify(parsedData, null, 2));
 
@@ -61,8 +76,6 @@ app.post("/api/leads", upload.single("file"), async (req, res) => {
       ],
       createdBy: parsedData.createdBy,
     };
-
-    console.log("Processed lead data:", JSON.stringify(leadData, null, 2));
 
     if (req.file) {
       leadData.descriptions[0].file = {
@@ -108,6 +121,7 @@ app.post("/api/leads", upload.single("file"), async (req, res) => {
   }
 });
 
+// GET all leads with specific fields and a limit of 10 results
 app.get("/api/leads", async (req, res) => {
   try {
     const leads = await Lead.find(
@@ -120,7 +134,7 @@ app.get("/api/leads", async (req, res) => {
         "itLandscape.netNew.Using ERP (y/n)": 1,
         "descriptionSection.description": 1,
         createdAt: 1,
-        createdBy: 1, // Add this line to include the user ID in the response
+        createdBy: 1,
       }
     )
       .sort({ createdAt: -1 })
@@ -138,6 +152,7 @@ app.get("/api/leads", async (req, res) => {
   }
 });
 
+// GET lead by lead number
 app.get("/api/leads/:leadNumber", async (req, res) => {
   try {
     const lead = await Lead.findOne({ leadNumber: req.params.leadNumber });
@@ -145,47 +160,64 @@ app.get("/api/leads/:leadNumber", async (req, res) => {
       return res.status(404).json({ error: "Lead not found" });
     }
     res.json(lead);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
   }
 });
 
-// New route to update a lead
+// PUT update lead by lead number
 app.put("/api/leads/:leadNumber", async (req, res) => {
   try {
-    const lead = await Lead.findOneAndUpdate(
-      { leadNumber: req.params.leadNumber },
-      req.body,
-      { new: true, runValidators: true }
-    );
+    const lead = await Lead.findOne({ leadNumber: req.params.leadNumber });
     if (!lead) {
       return res.status(404).json({ error: "Lead not found" });
     }
+
+    // Update fields if provided
+    if (req.body.companyInfo) {
+      lead.set({
+        companyInfo: { ...lead.companyInfo, ...req.body.companyInfo },
+      });
+    }
+    if (req.body.contactInfo) {
+      lead.set({
+        contactInfo: { ...lead.contactInfo, ...req.body.contactInfo },
+      });
+    }
+    if (req.body.itLandscape) {
+      lead.set({
+        itLandscape: { ...lead.itLandscape, ...req.body.itLandscape },
+      });
+    }
+
+    await lead.save();
     res.json(lead);
-  } catch (err) {
-    res.status(400).json({ error: err.message });
+  } catch (error) {
+    res.status(400).json({ error: error.message });
   }
 });
 
-// New route to add a new description to a lead
+// POST new description for a lead
 app.post("/api/leads/:leadNumber/descriptions", async (req, res) => {
   try {
     const lead = await Lead.findOne({ leadNumber: req.params.leadNumber });
     if (!lead) {
       return res.status(404).json({ error: "Lead not found" });
     }
+
     lead.descriptions.push({
       description: req.body.description,
       createdAt: new Date(),
     });
+
     await lead.save();
     res.json(lead);
-  } catch (err) {
-    res.status(400).json({ error: err.message });
+  } catch (error) {
+    res.status(400).json({ error: error.message });
   }
 });
 
-
+// GET all users
 app.get("/api/users", async (req, res) => {
   try {
     const users = await User.find({}, { name: 1, _id: 0 });
@@ -201,7 +233,18 @@ app.get("/api/users", async (req, res) => {
   }
 });
 
+// Global error handler for PayloadTooLargeError
+app.use((err, req, res, next) => {
+  if (err.type === "entity.too.large") {
+    return res.status(413).json({
+      success: false,
+      message: "Payload too large",
+    });
+  }
+  next(err);
+});
+
+// Start the server
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
-
