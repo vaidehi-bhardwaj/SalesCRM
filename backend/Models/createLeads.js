@@ -1,5 +1,6 @@
 const mongoose = require("mongoose");
 const Counter = require("./counter");
+const { date } = require("joi");
 
 const leadSchema = new mongoose.Schema(
   {
@@ -108,6 +109,7 @@ const leadSchema = new mongoose.Schema(
     descriptions: [
       {
         description: String,
+        createdAt: { type: Date, default: Date.now },
         file: {
           data: Buffer,
           contentType: String,

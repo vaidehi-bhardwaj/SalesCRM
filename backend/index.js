@@ -138,6 +138,54 @@ app.get("/api/leads", async (req, res) => {
   }
 });
 
+app.get("/api/leads/:leadNumber", async (req, res) => {
+  try {
+    const lead = await Lead.findOne({ leadNumber: req.params.leadNumber });
+    if (!lead) {
+      return res.status(404).json({ error: "Lead not found" });
+    }
+    res.json(lead);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// New route to update a lead
+app.put("/api/leads/:leadNumber", async (req, res) => {
+  try {
+    const lead = await Lead.findOneAndUpdate(
+      { leadNumber: req.params.leadNumber },
+      req.body,
+      { new: true, runValidators: true }
+    );
+    if (!lead) {
+      return res.status(404).json({ error: "Lead not found" });
+    }
+    res.json(lead);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+// New route to add a new description to a lead
+app.post("/api/leads/:leadNumber/descriptions", async (req, res) => {
+  try {
+    const lead = await Lead.findOne({ leadNumber: req.params.leadNumber });
+    if (!lead) {
+      return res.status(404).json({ error: "Lead not found" });
+    }
+    lead.descriptions.push({
+      description: req.body.description,
+      createdAt: new Date(),
+    });
+    await lead.save();
+    res.json(lead);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+
 app.get("/api/users", async (req, res) => {
   try {
     const users = await User.find({}, { name: 1, _id: 0 });

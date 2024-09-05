@@ -1,10 +1,21 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
+import LeadDetails from "./LeadDetails";
 
 const Display = () => {
   const [leads, setLeads] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+   const [selectedLead, setSelectedLead] = useState(null);
+
+     const handleLeadClick = (leadNumber) => {
+       setSelectedLead(leadNumber);
+     };
+
+     const handleCloseDetails = () => {
+       setSelectedLead(null);
+     };
+
 
   useEffect(() => {
     const fetchLeads = async () => {
@@ -67,7 +78,11 @@ const Display = () => {
         <tbody>
           {leads.map((lead) => (
             <tr key={lead._id || lead.leadNumber}>
-              <td>{lead.leadNumber || "N/A"}</td>
+              <td>
+                <button onClick={() => handleLeadClick(lead.leadNumber)}>
+                  {lead.leadNumber || "N/A"}
+                </button>
+              </td>
               <td>{getCompanyName(lead)}</td>
               <td>
                 {lead.contactInfo?.it?.name || "N/A"} (
@@ -79,6 +94,10 @@ const Display = () => {
           ))}
         </tbody>
       </table>
+
+      {selectedLead && (
+        <LeadDetails leadNumber={selectedLead} onClose={handleCloseDetails} />
+      )}
     </div>
   );
 };

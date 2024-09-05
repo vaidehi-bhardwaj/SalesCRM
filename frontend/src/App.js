@@ -10,6 +10,7 @@ import LayoutWithHeader from "./components/Layouts/LayoutWithHeader";
 import LayoutWithoutHeader from "./components/Layouts/LayoutWithoutHeader";
 import CreateLeads from "./components/CreateLeads/CreateLeads";
 import Display from "./components/Leads/Display";
+import LeadDetails from "./components/Leads/LeadDetails";
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -29,7 +30,8 @@ function App() {
         <Route element={<LayoutWithHeader />}>
           <Route path="/home" element={<PrivateRoute element={<Home />} />} />
           <Route path="/leads" element={<CreateLeads />} />
-          <Route path="/display" element={<Display />}/>
+          <Route path="/display" element={<Display />} />
+          <Route path="/details" element={<LeadDetails />} />
           {/* <Route path="/lead" component={LeadPage} />
         <Route path="/lead-details" component={LeadDetailsPage} />
         <Route path="/bi" component={BIPage} />
