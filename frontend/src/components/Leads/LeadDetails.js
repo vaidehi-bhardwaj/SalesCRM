@@ -86,21 +86,21 @@ const LeadDetails = ({ leadNumber, onClose, onUpdate }) => {
      return updatedLead;
    });
  };
-  const handleAddDescription = async () => {
-    if (!newDescription.trim()) return;
-    try {
-      const response = await axios.post(
-        `http://localhost:8080/api/leads/${leadNumber}/descriptions`,
-        { description: newDescription }
-      );
-      setLead(response.data);
-      setEditedLead(response.data);
-      setNewDescription("");
-    } catch (err) {
-      setError(err.message || "An error occurred while adding a description");
-    }
-  };
-
+ const handleAddDescription = async () => {
+   if (!newDescription.trim()) return;
+   try {
+     const userId = localStorage.getItem("userId"); // Get userId from localStorage
+     const response = await axios.post(
+       `http://localhost:8080/api/leads/${leadNumber}/descriptions`,
+       { description: newDescription, userId }
+     );
+     setLead(response.data);
+     setEditedLead(response.data);
+     setNewDescription("");
+   } catch (err) {
+     setError(err.message || "An error occurred while adding a description");
+   }
+ };
   const handleSave = async () => {
     try {
       console.log("Sending update:", JSON.stringify(editedLead, null, 2));
@@ -133,10 +133,10 @@ const LeadDetails = ({ leadNumber, onClose, onUpdate }) => {
   const renderFields = (config, section, subSection = null) => {
     return Array.isArray(config)
       ? config.map((row, rowIndex) => (
-          <div className="form-row" key={rowIndex}>
+          <div className="form-row-ld" key={rowIndex}>
             {Array.isArray(row) &&
               row.map((field) => (
-                <div className="form-group" key={field.name}>
+                <div className="form-group-ld" key={field.name}>
                   <label>{field.label}:</label>
                   {field.type === "select" ? (
                     <select
@@ -198,12 +198,12 @@ const LeadDetails = ({ leadNumber, onClose, onUpdate }) => {
     }
 
     return (
-      <div key={role} className="form-section">
+      <div key={role} className="form-section-ld">
         <h4>{role.charAt(0).toUpperCase() + role.slice(1)}</h4>
         {rows.map((row, rowIndex) => (
-          <div className="form-row" key={rowIndex}>
+          <div className="form-row-ld" key={rowIndex}>
             {row.map((field) => (
-              <div className="form-group" key={field}>
+              <div className="form-group-ld" key={field}>
                 <label>{field.charAt(0).toUpperCase() + field.slice(1)}:</label>
                 <input
                   type="text"
@@ -231,13 +231,13 @@ const LeadDetails = ({ leadNumber, onClose, onUpdate }) => {
         {editMode && <button onClick={handleSave}>Save Changes</button>}
 
         {/* Company Information */}
-        <section className="form-section">
+        <section className="form-section-ld">
           <h3>Company Information</h3>
           {renderFields(companyFormConfig, "companyInfo")}
         </section>
 
         {/* Contact Information */}
-        <section className="form-section">
+        <section className="form-section-ld">
           <h3>Contact Information</h3>
           {renderContactFields("it")}
           {renderContactFields("finance")}
@@ -245,7 +245,7 @@ const LeadDetails = ({ leadNumber, onClose, onUpdate }) => {
         </section>
 
         {/* IT Landscape */}
-        <section className="form-section">
+        <section className="form-section-ld">
           <h3>IT Landscape</h3>
           <h4>Net New</h4>
           {renderFields(itLandscapeConfig.netNew, "itLandscape", "netNew")}
@@ -258,7 +258,7 @@ const LeadDetails = ({ leadNumber, onClose, onUpdate }) => {
         </section>
 
         {/* Descriptions */}
-        <section className="form-section">
+        <section className="form-section-ld">
           <h3>Descriptions</h3>
           <div className="form-group">
             <label>New Description:</label>
@@ -278,6 +278,7 @@ const LeadDetails = ({ leadNumber, onClose, onUpdate }) => {
               <tr>
                 <th>Description</th>
                 <th>Date</th>
+                <th>Added by</th>
               </tr>
             </thead>
             <tbody>
@@ -286,6 +287,7 @@ const LeadDetails = ({ leadNumber, onClose, onUpdate }) => {
                   <tr key={index}>
                     <td>{desc.description}</td>
                     <td>{new Date(desc.createdAt).toLocaleString()}</td>
+                    <td>{desc.addedBy ? desc.addedBy.name : "Unknown"}</td>
                   </tr>
                 ))}
             </tbody>

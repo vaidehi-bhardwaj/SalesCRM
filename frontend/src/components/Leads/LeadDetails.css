@@ -45,45 +45,45 @@
 }
 
 /* Form Sections */
-.form-section {
+.form-section-ld {
   margin-bottom: 20px;
 }
 
-.form-section h3 {
+.form-section-ld h3 {
   margin-bottom: 15px;
   font-size: 1.5em;
   border-bottom: 2px solid #f0f0f0;
   padding-bottom: 5px;
 }
 
-.form-section h4 {
+.form-section-ld h4 {
   margin-top: 10px;
   font-size: 1.2em;
 }
 
 /* Form Row and Group */
-.form-row {
+.form-row-ld {
   display: flex;
   flex-wrap: wrap;
   margin-bottom: 15px;
 }
 
-.form-group {
+.form-group-ld {
   flex: 1;
   min-width: 200px;
   margin-right: 15px;
   margin-bottom: 10px;
 }
 
-.form-group label {
+.form-group-ld label {
   display: block;
   margin-bottom: 5px;
   font-weight: bold;
 }
 
-.form-group input,
-.form-group select,
-.form-group textarea {
+.form-group-ld input,
+.form-group-ld select,
+.form-group-ld textarea {
   width: 100%;
   padding: 8px;
   font-size: 1em;
@@ -111,16 +111,4 @@
 }
 
 /* For responsiveness */
-@media (max-width: 768px) {
-  .modal-content {
-    width: 90%;
-  }
 
-  .form-group {
-    min-width: 100%;
-  }
-
-  .form-row {
-    flex-direction: column;
-  }
-}

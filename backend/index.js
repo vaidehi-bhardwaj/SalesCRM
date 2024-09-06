@@ -7,7 +7,7 @@ const OptionsRouter = require("./Routes/OptionsRouter");
 const Lead = require("./Models/createLeads");
 const multer = require("multer");
 const User = require("./Models/User");
-
+const mongoose = require("mongoose");
 // CORS configuration
 const corsOptions = {
   origin: "http://localhost:3000",
@@ -124,29 +124,52 @@ app.post("/api/leads", upload.single("file"), async (req, res) => {
 // GET all leads with specific fields and a limit of 10 results
 app.get("/api/leads", async (req, res) => {
   try {
-    const leads = await Lead.find(
-      {},
-      {
-        leadNumber: 1,
-        "companyInfo.Company Name": 1,
-        "companyInfo.Lead Assigned To": 1,
-        "companyInfo.Generic Phone 1": 1,
-        "companyInfo.Generic Phone 2": 1,
-        "companyInfo.Priority": 1,
-        "companyInfo.Next Action": 1,
-        "companyInfo.dateField": 1,
-        "contactInfo.it.name": 1,
-        "contactInfo.it.email": 1,
-        "itLandscape.netNew.Using ERP (y/n)": 1,
-        descriptions: 1,
-        createdAt: 1,
-        createdBy: 1,
-      }
-    )
+    const userId = req.query.userId;
+    console.log("Received request for leads. User ID:", userId);
+
+    if (!userId) {
+      console.log("No user ID provided");
+      return res.status(400).json({ error: "User ID is required" });
+    }
+
+    // Fetch the user to get their name
+    const user = await User.findById(userId);
+    if (!user) {
+      console.log("User not found");
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    const query = {
+      $or: [
+        { createdBy: new mongoose.Types.ObjectId(userId) },
+        { "companyInfo.Lead Assigned To": { $in: [userId, user.name] } },
+      ],
+    };
+
+    console.log("Query:", JSON.stringify(query));
+
+    const leads = await Lead.find(query, {
+      leadNumber: 1,
+      "companyInfo.Company Name": 1,
+      "companyInfo.Lead Assigned To": 1,
+      "companyInfo.Generic Phone 1": 1,
+      "companyInfo.Generic Phone 2": 1,
+      "companyInfo.Priority": 1,
+      "companyInfo.Next Action": 1,
+      "companyInfo.dateField": 1,
+      "contactInfo.it.name": 1,
+      "contactInfo.it.email": 1,
+      "itLandscape.netNew.Using ERP (y/n)": 1,
+      descriptions: 1,
+      createdAt: 1,
+      createdBy: 1,
+    })
       .populate("createdBy", "name")
       .sort({ createdAt: -1 })
       .limit(10);
 
+    console.log("Leads found:", leads.length);
+    console.log("First lead (if any):", leads[0]);
 
     res.json(leads);
   } catch (error) {
@@ -158,6 +181,7 @@ app.get("/api/leads", async (req, res) => {
     });
   }
 });
+
 // GET lead by lead number
 app.get("/api/leads/:leadNumber", async (req, res) => {
   try {
@@ -233,21 +257,37 @@ app.put("/api/leads/:leadNumber", async (req, res) => {
 
 // POST new description for a lead
 app.post("/api/leads/:leadNumber/descriptions", async (req, res) => {
+  console.log("Received request to add description:", req.params, req.body);
   try {
-    const lead = await Lead.findOne({ leadNumber: req.params.leadNumber });
+    const { leadNumber } = req.params;
+    const { description, userId } = req.body;
+
+    console.log("Parsed data:", { leadNumber, description, userId });
+
+    if (!description || !userId) {
+      return res.status(400).json({ error: "Missing required fields" });
+    }
+
+    const lead = await Lead.findOne({ leadNumber });
     if (!lead) {
       return res.status(404).json({ error: "Lead not found" });
     }
 
     lead.descriptions.push({
-      description: req.body.description,
-      createdAt: new Date(),
+      description,
+      addedBy: userId,
+      // Include other fields as necessary
     });
 
     await lead.save();
+
+    // Populate the user information
+    await lead.populate("descriptions.addedBy", "name");
+
     res.json(lead);
   } catch (error) {
-    res.status(400).json({ error: error.message });
+    console.error("Error in add description route:", error);
+    res.status(500).json({ error: "Server error", details: error.message });
   }
 });
 

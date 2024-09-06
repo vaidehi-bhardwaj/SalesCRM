@@ -8,7 +8,9 @@ const Display = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedLead, setSelectedLead] = useState(null);
-const [refreshTrigger, setRefreshTrigger] = useState(0);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
+  const currentUserId = localStorage.getItem("userId");
+  console.log("Current User ID:", currentUserId);
 
   const handleLeadClick = (leadNumber) => {
     setSelectedLead(leadNumber);
@@ -25,27 +27,41 @@ const [refreshTrigger, setRefreshTrigger] = useState(0);
   useEffect(() => {
     const fetchLeads = async () => {
       try {
-        const response = await axios.get("http://localhost:8080/api/leads");
+        console.log("Fetching leads for user:", currentUserId);
+        const response = await axios.get(
+          `http://localhost:8080/api/leads?userId=${currentUserId}`
+        );
+        console.log("Response from server:", response);
+
         if (response.data && Array.isArray(response.data)) {
           console.log("Fetched leads:", response.data);
           setLeads(response.data);
         } else {
+          console.error(
+            "Invalid data format received from server:",
+            response.data
+          );
           throw new Error("Invalid data format received from server");
         }
       } catch (err) {
+        console.error("Error fetching leads:", err);
         setError(
           err.response?.data?.error ||
             err.message ||
             "An unknown error occurred"
         );
-        console.error("Error details:", err);
       } finally {
         setLoading(false);
       }
     };
 
     fetchLeads();
-  }, [refreshTrigger]);
+  }, [refreshTrigger, currentUserId]);
+
+  const getAssignedUser = (lead) => {
+    const assigned = lead.companyInfo?.["Lead Assigned To"];
+    return assigned || "Not Assigned";
+  };
 
   // Helper function to get the most recent description creation date
   const getLatestDescriptionDate = (lead) => {
@@ -69,7 +85,7 @@ const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   return (
     <div>
-      <h2>Recent Leads</h2>
+      <h2 className="display">My Leads (User ID: {currentUserId})</h2>
       <table>
         <thead>
           <tr>
@@ -89,7 +105,10 @@ const [refreshTrigger, setRefreshTrigger] = useState(0);
           {leads.map((lead) => (
             <tr key={lead._id || lead.leadNumber}>
               <td>
-                <button onClick={() => handleLeadClick(lead.leadNumber)}>
+                <button
+                  className="display-button"
+                  onClick={() => handleLeadClick(lead.leadNumber)}
+                >
                   {lead.leadNumber || ""}
                 </button>
               </td>
@@ -97,7 +116,7 @@ const [refreshTrigger, setRefreshTrigger] = useState(0);
               <td>{lead.companyInfo?.["Company Name"] || ""}</td>
               <td>{getLatestDescriptionDate(lead)}</td>
               <td>{lead.createdBy?.name || ""}</td>
-              <td>{lead.companyInfo?.["Lead Assigned To"] || ""}</td>
+              <td>{getAssignedUser(lead)}</td>
               <td>{getPhoneNumbers(lead)}</td>
               <td>
                 {lead.companyInfo?.dateField
@@ -121,5 +140,4 @@ const [refreshTrigger, setRefreshTrigger] = useState(0);
     </div>
   );
 };
-
 export default Display;

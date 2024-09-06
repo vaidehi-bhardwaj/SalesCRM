@@ -106,7 +106,6 @@ const leadSchema = new mongoose.Schema(
         "Implementation Partner": String,
       },
     },
-
     descriptions: [
       {
         description: String,
@@ -118,6 +117,7 @@ const leadSchema = new mongoose.Schema(
         },
         selectedOption: String,
         radioValue: String,
+        addedBy: { type: mongoose.Schema.Types.ObjectId, ref: "user" }, // Add this line
       },
     ],
   },
