@@ -7,7 +7,7 @@ import {
 } from "../CreateLeads/formConfigs";
 import "./LeadDetails.css";
 
-const LeadDetails = ({ leadNumber, onClose }) => {
+const LeadDetails = ({ leadNumber, onClose, onUpdate }) => {
   const [lead, setLead] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -23,7 +23,7 @@ const LeadDetails = ({ leadNumber, onClose }) => {
           `http://localhost:8080/api/leads/${leadNumber}`
         );
         setLead(response.data);
-        setEditedLead(response.data);
+        setEditedLead(JSON.parse(JSON.stringify(response.data))); 
       } catch (err) {
         setError(
           err.message || "An error occurred while fetching lead details"
@@ -57,28 +57,35 @@ const LeadDetails = ({ leadNumber, onClose }) => {
     fetchOptions();
   }, []);
 
-  const handleInputChange = (e, section, subSection) => {
-    const { name, value } = e.target;
-    setEditedLead((prevLead) => {
-      let updatedLead = { ...prevLead };
-      if (section === "itLandscape" && subSection === "SAPInstalledBase") {
-        updatedLead.itLandscape = updatedLead.itLandscape || {};
-        updatedLead.itLandscape.SAPInstalledBase =
-          updatedLead.itLandscape.SAPInstalledBase || {};
-        updatedLead.itLandscape.SAPInstalledBase[name] = value;
-      } else if (subSection) {
-        updatedLead[section] = updatedLead[section] || {};
-        updatedLead[section][subSection] =
-          updatedLead[section][subSection] || {};
-        updatedLead[section][subSection][name] = value;
-      } else {
-        updatedLead[section] = updatedLead[section] || {};
-        updatedLead[section][name] = value;
-      }
-      return updatedLead;
-    });
-  };
-
+  // In your React component (LeadDetails.js)
+ const handleInputChange = (e, section, subSection) => {
+   const { name, value } = e.target;
+   setEditedLead((prevLead) => {
+     const updatedLead = { ...prevLead };
+     if (section === "companyInfo") {
+       updatedLead.companyInfo = { ...updatedLead.companyInfo, [name]: value };
+     } else if (
+       section === "itLandscape" &&
+       subSection === "SAPInstalledBase"
+     ) {
+       updatedLead.itLandscape = {
+         ...updatedLead.itLandscape,
+         SAPInstalledBase: {
+           ...updatedLead.itLandscape.SAPInstalledBase,
+           [name]: value,
+         },
+       };
+     } else if (subSection) {
+       updatedLead[section] = {
+         ...updatedLead[section],
+         [subSection]: { ...updatedLead[section][subSection], [name]: value },
+       };
+     } else {
+       updatedLead[section] = { ...updatedLead[section], [name]: value };
+     }
+     return updatedLead;
+   });
+ };
   const handleAddDescription = async () => {
     if (!newDescription.trim()) return;
     try {
@@ -96,6 +103,7 @@ const LeadDetails = ({ leadNumber, onClose }) => {
 
   const handleSave = async () => {
     try {
+      console.log("Sending update:", JSON.stringify(editedLead, null, 2));
       const leadToSave = {
         ...editedLead,
         itLandscape: {
@@ -110,6 +118,7 @@ const LeadDetails = ({ leadNumber, onClose }) => {
       );
       setLead(response.data);
       setEditMode(false);
+      onUpdate();
     } catch (err) {
       setError(
         err.response?.data?.error || "An error occurred while saving changes"
@@ -173,43 +182,43 @@ const LeadDetails = ({ leadNumber, onClose }) => {
       : null;
   };
 
-const renderContactFields = (role) => {
-  const fields = [
-    "name",
-    "dlExt",
-    "designation",
-    "mobile",
-    "email",
-    "personalEmail",
-  ];
+  const renderContactFields = (role) => {
+    const fields = [
+      "name",
+      "dlExt",
+      "designation",
+      "mobile",
+      "email",
+      "personalEmail",
+    ];
 
-  const rows = [];
-  for (let i = 0; i < fields.length; i += 3) {
-    rows.push(fields.slice(i, i + 3)); // Create rows with 3 fields each
-  }
+    const rows = [];
+    for (let i = 0; i < fields.length; i += 3) {
+      rows.push(fields.slice(i, i + 3)); // Create rows with 3 fields each
+    }
 
-  return (
-    <div key={role} className="form-section">
-      <h4>{role.charAt(0).toUpperCase() + role.slice(1)}</h4>
-      {rows.map((row, rowIndex) => (
-        <div className="form-row" key={rowIndex}>
-          {row.map((field) => (
-            <div className="form-group" key={field}>
-              <label>{field.charAt(0).toUpperCase() + field.slice(1)}:</label>
-              <input
-                type="text"
-                name={field}
-                value={editedLead?.contactInfo?.[role]?.[field] || ""}
-                onChange={(e) => handleInputChange(e, "contactInfo", role)}
-                disabled={!editMode}
-              />
-            </div>
-          ))}
-        </div>
-      ))}
-    </div>
-  );
-};
+    return (
+      <div key={role} className="form-section">
+        <h4>{role.charAt(0).toUpperCase() + role.slice(1)}</h4>
+        {rows.map((row, rowIndex) => (
+          <div className="form-row" key={rowIndex}>
+            {row.map((field) => (
+              <div className="form-group" key={field}>
+                <label>{field.charAt(0).toUpperCase() + field.slice(1)}:</label>
+                <input
+                  type="text"
+                  name={field}
+                  value={editedLead?.contactInfo?.[role]?.[field] || ""}
+                  onChange={(e) => handleInputChange(e, "contactInfo", role)}
+                  disabled={!editMode}
+                />
+              </div>
+            ))}
+          </div>
+        ))}
+      </div>
+    );
+  };
 
   return (
     <div className="modal">

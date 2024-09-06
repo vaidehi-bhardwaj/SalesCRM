@@ -1,23 +1,27 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import LeadDetails from "./LeadDetails";
-import "./Display.css"
+import "./Display.css";
 
 const Display = () => {
   const [leads, setLeads] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-   const [selectedLead, setSelectedLead] = useState(null);
+  const [selectedLead, setSelectedLead] = useState(null);
+const [refreshTrigger, setRefreshTrigger] = useState(0);
 
-     const handleLeadClick = (leadNumber) => {
-       setSelectedLead(leadNumber);
-     };
+  const handleLeadClick = (leadNumber) => {
+    setSelectedLead(leadNumber);
+  };
 
-     const handleCloseDetails = () => {
-       setSelectedLead(null);
-     };
+  const handleCloseDetails = () => {
+    setSelectedLead(null);
+    setRefreshTrigger((prev) => prev + 1); // Trigger a refresh when closing LeadDetails
+  };
 
-
+  const handleLeadUpdate = () => {
+    setRefreshTrigger((prev) => prev + 1); // Trigger a refresh when a lead is updated
+  };
   useEffect(() => {
     const fetchLeads = async () => {
       try {
@@ -41,22 +45,22 @@ const Display = () => {
     };
 
     fetchLeads();
-  }, []);
+  }, [refreshTrigger]);
 
-  // Helper function to get company name
-  const getCompanyName = (lead) => {
-    if (lead.companyInfo && lead.companyInfo["Company Name"]) {
-      return lead.companyInfo["Company Name"];
+  // Helper function to get the most recent description creation date
+  const getLatestDescriptionDate = (lead) => {
+    if (lead.descriptions && lead.descriptions.length > 0) {
+      const dates = lead.descriptions.map((desc) => new Date(desc.createdAt));
+      return new Date(Math.max(...dates)).toLocaleDateString();
     }
-    return "N/A";
+    return "";
   };
 
-  // Helper function to get description
-  const getDescription = (lead) => {
-    if (lead.descriptionSection && lead.descriptionSection.description) {
-      return lead.descriptionSection.description;
-    }
-    return "N/A";
+  // Helper function to get phone numbers
+  const getPhoneNumbers = (lead) => {
+    const phone1 = lead.companyInfo?.["Generic Phone 1"] || "";
+    const phone2 = lead.companyInfo?.["Generic Phone 2"] || "";
+    return [phone1, phone2].filter(Boolean).join(", ") || "";
   };
 
   if (loading) return <div>Loading...</div>;
@@ -70,10 +74,15 @@ const Display = () => {
         <thead>
           <tr>
             <th>Lead Number</th>
+            <th>Creation Date</th>
             <th>Company Name</th>
-            <th>IT Contact</th>
-            <th>ERP System</th>
-            <th>Description</th>
+            <th>Latest Description Date</th>
+            <th>Created By</th>
+            <th>Assign To</th>
+            <th>Phone</th>
+            <th>Action Date</th>
+            <th>Priority</th>
+            <th>Next Action</th>
           </tr>
         </thead>
         <tbody>
@@ -81,23 +90,33 @@ const Display = () => {
             <tr key={lead._id || lead.leadNumber}>
               <td>
                 <button onClick={() => handleLeadClick(lead.leadNumber)}>
-                  {lead.leadNumber || "N/A"}
+                  {lead.leadNumber || ""}
                 </button>
               </td>
-              <td>{getCompanyName(lead)}</td>
+              <td>{new Date(lead.createdAt).toLocaleDateString()}</td>
+              <td>{lead.companyInfo?.["Company Name"] || ""}</td>
+              <td>{getLatestDescriptionDate(lead)}</td>
+              <td>{lead.createdBy?.name || ""}</td>
+              <td>{lead.companyInfo?.["Lead Assigned To"] || ""}</td>
+              <td>{getPhoneNumbers(lead)}</td>
               <td>
-                {lead.contactInfo?.it?.name || "N/A"} (
-                {lead.contactInfo?.it?.email || "N/A"})
+                {lead.companyInfo?.dateField
+                  ? new Date(lead.companyInfo.dateField).toLocaleDateString()
+                  : ""}
               </td>
-              <td>{lead.itLandscape?.netNew?.["Using ERP (y/n)"] || "N/A"}</td>
-              <td>{getDescription(lead)}</td>
+              <td>{lead.companyInfo?.Priority || ""}</td>
+              <td>{lead.companyInfo?.["Next Action"] || ""}</td>
             </tr>
           ))}
         </tbody>
       </table>
 
       {selectedLead && (
-        <LeadDetails leadNumber={selectedLead} onClose={handleCloseDetails} />
+        <LeadDetails
+          leadNumber={selectedLead}
+          onClose={handleCloseDetails}
+          onUpdate={handleLeadUpdate}
+        />
       )}
     </div>
   );

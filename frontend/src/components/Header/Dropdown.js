@@ -10,7 +10,9 @@ function Dropdown({ name, items, isOpen, toggleDropdown }) {
       case "Create Leads":
         path = "/leads";
         break;
-      case "Item 2":
+      case "Leads":
+        path = "/display";
+        break;
       case "Item 3":
         path = "/lead";
         break;

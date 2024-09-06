@@ -129,18 +129,25 @@ app.get("/api/leads", async (req, res) => {
       {
         leadNumber: 1,
         "companyInfo.Company Name": 1,
+        "companyInfo.Lead Assigned To": 1,
+        "companyInfo.Generic Phone 1": 1,
+        "companyInfo.Generic Phone 2": 1,
+        "companyInfo.Priority": 1,
+        "companyInfo.Next Action": 1,
+        "companyInfo.dateField": 1,
         "contactInfo.it.name": 1,
         "contactInfo.it.email": 1,
         "itLandscape.netNew.Using ERP (y/n)": 1,
-        "descriptionSection.description": 1,
+        descriptions: 1,
         createdAt: 1,
         createdBy: 1,
       }
     )
+      .populate("createdBy", "name")
       .sort({ createdAt: -1 })
       .limit(10);
 
-    console.log("Leads being sent:", JSON.stringify(leads, null, 2));
+
     res.json(leads);
   } catch (error) {
     console.error("Error fetching leads:", error);
@@ -151,7 +158,6 @@ app.get("/api/leads", async (req, res) => {
     });
   }
 });
-
 // GET lead by lead number
 app.get("/api/leads/:leadNumber", async (req, res) => {
   try {
@@ -165,7 +171,6 @@ app.get("/api/leads/:leadNumber", async (req, res) => {
   }
 });
 
-// PUT update lead by lead number
 app.put("/api/leads/:leadNumber", async (req, res) => {
   try {
     const lead = await Lead.findOne({ leadNumber: req.params.leadNumber });
@@ -173,29 +178,58 @@ app.put("/api/leads/:leadNumber", async (req, res) => {
       return res.status(404).json({ error: "Lead not found" });
     }
 
-    // Update fields if provided
+    console.log("Received update data:", JSON.stringify(req.body, null, 2));
+    console.log("Lead before update:", JSON.stringify(lead, null, 2));
+
+    // Field mapping to handle case sensitivity and naming differences
+    const fieldMapping = {
+      "Generic email 1": "Generic Email 1",
+      "Generic phone 1": "Generic Phone 1",
+      "Lead Assigned to": "Lead Assigned To",
+      "Total no. of Manuf. Units": "Total no. of Manuf. Units",
+      "Total no. of offices": "Total no. of Offices",
+      "BDM": "BDM"
+    };
+
+    // Helper function to recursively update nested objects with field mapping
+    const updateNestedObject = (target, source) => {
+      Object.keys(source).forEach(key => {
+        const mappedKey = fieldMapping[key] || key;
+        if (typeof source[key] === 'object' && source[key] !== null && !Array.isArray(source[key])) {
+          if (!(mappedKey in target)) target[mappedKey] = {};
+          updateNestedObject(target[mappedKey], source[key]);
+        } else {
+          target[mappedKey] = source[key];
+        }
+      });
+    };
+
+    // Update companyInfo
     if (req.body.companyInfo) {
-      lead.set({
-        companyInfo: { ...lead.companyInfo, ...req.body.companyInfo },
-      });
-    }
-    if (req.body.contactInfo) {
-      lead.set({
-        contactInfo: { ...lead.contactInfo, ...req.body.contactInfo },
-      });
-    }
-    if (req.body.itLandscape) {
-      lead.set({
-        itLandscape: { ...lead.itLandscape, ...req.body.itLandscape },
-      });
+      updateNestedObject(lead.companyInfo, req.body.companyInfo);
     }
 
+    // Update other sections
+    const fieldsToUpdate = ['contactInfo', 'itLandscape', 'descriptions'];
+    for (const field of fieldsToUpdate) {
+      if (req.body[field]) {
+        updateNestedObject(lead[field], req.body[field]);
+      }
+    }
+
+    // Ensure numeric fields are stored as numbers
+    lead.companyInfo["Total no. of Manuf. Units"] = Number(lead.companyInfo["Total no. of Manuf. Units"]);
+    lead.companyInfo["Total no. of Offices"] = Number(lead.companyInfo["Total no. of Offices"]);
+
     await lead.save();
+    console.log("Lead after update:", JSON.stringify(lead, null, 2));
     res.json(lead);
   } catch (error) {
+    console.error("Error updating lead:", error);
     res.status(400).json({ error: error.message });
   }
 });
+
 
 // POST new description for a lead
 app.post("/api/leads/:leadNumber/descriptions", async (req, res) => {
@@ -244,7 +278,25 @@ app.use((err, req, res, next) => {
   next(err);
 });
 
+app.get("/api/users/:userId", async (req, res) => {
+  try {
+    const user = await User.findById(req.params.userId, { name: 1, _id: 0 });
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+    res.json(user);
+  } catch (error) {
+    console.error("Error fetching user:", error);
+    res.status(500).json({
+      success: false,
+      error: "Error fetching user",
+      details: error.message,
+    });
+  }
+});
+
 // Start the server
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
+
