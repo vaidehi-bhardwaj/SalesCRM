@@ -48,7 +48,35 @@ app.post("/api/leads", upload.single("file"), async (req, res) => {
     console.log("Parsed data:", JSON.stringify(parsedData, null, 2));
 
     const leadData = {
-      companyInfo: parsedData.company,
+      companyInfo: {
+        "Lead Type": parsedData.company["Lead Type"],
+        "Generic Email 1": parsedData.company["Generic email 1"],
+        Vertical: parsedData.company.Vertical,
+        "Company Name": parsedData.company["Company Name"],
+        "Generic Email 2": parsedData.company["Generic email 2"],
+        "Lead Assigned To": parsedData.company["Lead Assigned to"],
+        Website: parsedData.company.Website,
+        "Generic Phone 1": parsedData.company["Generic phone 1"],
+        BDM: parsedData.company.BDM,
+        Address: parsedData.company.Address,
+        "Generic Phone 2": parsedData.company["Generic phone 2"],
+        "Lead Status": parsedData.company["Lead Status"],
+        City: parsedData.company.City,
+        "Lead Source": parsedData.company["Lead Source"],
+        Priority: parsedData.company.Priority,
+        State: parsedData.company.State,
+        "Total no. of Offices": parsedData.company["Total no. of Offices"],
+        "Next Action": parsedData.company["Next Action"],
+        Country: parsedData.company.Country,
+        "Turn Over(INR)": parsedData.company["Turn Over(INR)"],
+        "Lead Usable": parsedData.company["Lead Usable"],
+        "Employee Count": parsedData.company["Employee Count"],
+        "Total no. of Manuf. Units":
+          parsedData.company["Total no. of Manuf. Units"],
+        Reason: parsedData.company.Reason,
+        "About The Company": parsedData.company["About The Company"],
+        dateField: parsedData.company.dateField,
+      },
       contactInfo: {
         it: {
           name: parsedData.contact.itName,
@@ -212,14 +240,18 @@ app.put("/api/leads/:leadNumber", async (req, res) => {
       "Lead Assigned to": "Lead Assigned To",
       "Total no. of Manuf. Units": "Total no. of Manuf. Units",
       "Total no. of offices": "Total no. of Offices",
-      "BDM": "BDM"
+      BDM: "BDM",
     };
 
     // Helper function to recursively update nested objects with field mapping
     const updateNestedObject = (target, source) => {
-      Object.keys(source).forEach(key => {
+      Object.keys(source).forEach((key) => {
         const mappedKey = fieldMapping[key] || key;
-        if (typeof source[key] === 'object' && source[key] !== null && !Array.isArray(source[key])) {
+        if (
+          typeof source[key] === "object" &&
+          source[key] !== null &&
+          !Array.isArray(source[key])
+        ) {
           if (!(mappedKey in target)) target[mappedKey] = {};
           updateNestedObject(target[mappedKey], source[key]);
         } else {
@@ -234,7 +266,7 @@ app.put("/api/leads/:leadNumber", async (req, res) => {
     }
 
     // Update other sections
-    const fieldsToUpdate = ['contactInfo', 'itLandscape', 'descriptions'];
+    const fieldsToUpdate = ["contactInfo", "itLandscape", "descriptions"];
     for (const field of fieldsToUpdate) {
       if (req.body[field]) {
         updateNestedObject(lead[field], req.body[field]);
@@ -242,8 +274,12 @@ app.put("/api/leads/:leadNumber", async (req, res) => {
     }
 
     // Ensure numeric fields are stored as numbers
-    lead.companyInfo["Total no. of Manuf. Units"] = Number(lead.companyInfo["Total no. of Manuf. Units"]);
-    lead.companyInfo["Total no. of Offices"] = Number(lead.companyInfo["Total no. of Offices"]);
+    lead.companyInfo["Total no. of Manuf. Units"] = Number(
+      lead.companyInfo["Total no. of Manuf. Units"]
+    );
+    lead.companyInfo["Total no. of Offices"] = Number(
+      lead.companyInfo["Total no. of Offices"]
+    );
 
     await lead.save();
     console.log("Lead after update:", JSON.stringify(lead, null, 2));
@@ -253,7 +289,6 @@ app.put("/api/leads/:leadNumber", async (req, res) => {
     res.status(400).json({ error: error.message });
   }
 });
-
 
 // POST new description for a lead
 app.post("/api/leads/:leadNumber/descriptions", async (req, res) => {
@@ -339,4 +374,3 @@ app.get("/api/users/:userId", async (req, res) => {
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
-

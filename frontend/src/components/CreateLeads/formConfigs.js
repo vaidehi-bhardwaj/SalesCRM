@@ -6,40 +6,39 @@ export const companyFormConfig = [
       name: "Lead Type",
       label: "Lead Type",
       type: "select",
-      options: "leadTypeOptions",
-      required: true,
+      options: "leadTypeOptions"
+    
     },
     { name: "Generic email 1", label: "Generic email 1", type: "email" },
     {
       name: "Vertical",
       label: "Vertical",
       type: "select",
-      options: "verticalOptions",
-      required: true,
+      options: "verticalOptions"
     },
   ],
   [
     {
       name: "Company Name",
       label: "Company Name",
-      type: "text",
-      required: true,
+      type: "text"
+  
     },
     { name: "Generic email 2", label: "Generic email 2", type: "email" },
     {
       name: "Lead Assigned to",
       label: "Lead Assigned to",
       type: "select",
-      options: "leadAssignedToOptions",
+      options: "leadAssignedToOptions"
     },
   ],
   [
-    { name: "Website", label: "Website", type: "url", required: true },
+    { name: "Website", label: "Website", type: "url"},
     { name: "Generic phone 1", label: "Generic phone 1", type: "tel" },
     { name: "BDM", label: "BDM", type: "select", options: "bdmOptions" },
   ],
   [
-    { name: "Address", label: "Address", type: "text", required: true },
+    { name: "Address", label: "Address", type: "text" },
     { name: "Generic phone 2", label: "Generic phone 2", type: "tel" },
     {
       name: "Lead Status",
@@ -49,7 +48,7 @@ export const companyFormConfig = [
     },
   ],
   [
-    { name: "City", label: "City", type: "text", required: true },
+    { name: "City", label: "City", type: "text"},
     {
       name: "Lead Source",
       label: "Lead Source",
@@ -61,7 +60,7 @@ export const companyFormConfig = [
       label: "Priority",
       type: "select",
       options: "priorityOptions",
-      required: true,
+    
     },
   ],
   [
@@ -70,7 +69,7 @@ export const companyFormConfig = [
       label: "State",
       type: "select",
       options: "stateOptions",
-      required: true,
+    
     },
     {
       name: "Total no. of offices",
@@ -82,7 +81,7 @@ export const companyFormConfig = [
       label: "Next Action",
       type: "select",
       options: "nextActionOptions",
-      required: true,
+  
       datePicker: { name: "dateField", label: "Date" },
     },
   ],
@@ -104,7 +103,7 @@ export const companyFormConfig = [
       label: "Lead Usable",
       type: "select",
       options: "leadUsableOptions",
-      required: true,
+      
     },
   ],
   [
@@ -132,29 +131,29 @@ export const contactFormConfig = [
   {
     role: "IT",
     fields: [
-      { name: "itName", label: "Name", type: "text", required: true },
+      { name: "itName", label: "Name", type: "text" },
       { name: "itDlExt", label: "DL/Ext", type: "text" },
       { name: "itDesignation", label: "Designation", type: "text" },
       { name: "itMobile", label: "Mobile", type: "tel" },
-      { name: "itEmail", label: "Email", type: "email", required: true },
+      { name: "itEmail", label: "Email", type: "email"},
       { name: "itPersonalEmail", label: "Personal Email", type: "email" },
     ],
   },
   {
     role: "Finance",
     fields: [
-      { name: "financeName", label: "Name", type: "text", required: true },
+      { name: "financeName", label: "Name", type: "text"},
       { name: "financeDlExt", label: "DL/Ext", type: "text" },
       { name: "financeDesignation", label: "Designation", type: "text" },
       { name: "financeMobile", label: "Mobile", type: "tel" },
-      { name: "financeEmail", label: "Email", type: "email", required: true },
+      { name: "financeEmail", label: "Email", type: "email"},
       { name: "financePersonalEmail", label: "Personal Email", type: "email" },
     ],
   },
   {
     role: "Business Head",
     fields: [
-      { name: "businessHeadName", label: "Name", type: "text", required: true },
+      { name: "businessHeadName", label: "Name", type: "text" },
       { name: "businessHeadDlExt", label: "DL/Ext", type: "text" },
       { name: "businessHeadDesignation", label: "Designation", type: "text" },
       { name: "businessHeadMobile", label: "Mobile", type: "tel" },
@@ -162,7 +161,7 @@ export const contactFormConfig = [
         name: "businessHeadEmail",
         label: "Email",
         type: "email",
-        required: true,
+        
       },
       {
         name: "businessHeadPersonalEmail",

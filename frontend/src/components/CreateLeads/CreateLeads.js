@@ -1,7 +1,11 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import axios from "axios";
 import "./CreateLeads.css";
-import { companyFormConfig, contactFormConfig, itLandscapeConfig } from "./formConfigs";
+import {
+  companyFormConfig,
+  contactFormConfig,
+  itLandscapeConfig,
+} from "./formConfigs";
 
 const FormRow = ({ children }) => <div className="form-row">{children}</div>;
 
@@ -51,20 +55,20 @@ const FormGroup = ({ field, formData, handleChange, errors, options }) => (
 );
 
 const CreateLeads = () => {
-   const [userId, setUserId] = useState(null);
-   const [formData, setFormData] = useState({
-     company: {},
-     contact: {},
-     additionalSections: [],
-     itLandscape: {
-       netNew: {},
-       SAPInstalledBase: {},
-     },
-     description: "",
-     selectedOption: "",
-     radioValue: "",
-     createdBy: "",
-   });
+  const [userId, setUserId] = useState(null);
+  const [formData, setFormData] = useState({
+    company: {},
+    contact: {},
+    additionalSections: [],
+    itLandscape: {
+      netNew: {},
+      SAPInstalledBase: {},
+    },
+    description: "",
+    selectedOption: "",
+    radioValue: "",
+    createdBy: "",
+  });
   const [errors, setErrors] = useState({});
   const [options, setOptions] = useState({});
   const [file, setFile] = useState(null);
@@ -90,16 +94,16 @@ const CreateLeads = () => {
     fetchOptions();
   }, []);
 
- useEffect(() => {
-   const userIdFromStorage = localStorage.getItem("userId");
-   if (userIdFromStorage) {
-     setUserId(userIdFromStorage);
-     setFormData((prevData) => ({
-       ...prevData,
-       createdBy: userIdFromStorage,
-     }));
-   }
- }, []);
+  useEffect(() => {
+    const userIdFromStorage = localStorage.getItem("userId");
+    if (userIdFromStorage) {
+      setUserId(userIdFromStorage);
+      setFormData((prevData) => ({
+        ...prevData,
+        createdBy: userIdFromStorage,
+      }));
+    }
+  }, []);
 
   const handleChange = useCallback((e, section, index) => {
     const { name, value } = e.target;
@@ -197,41 +201,40 @@ const CreateLeads = () => {
     return Object.keys(newErrors).length === 0;
   }, [formData, file]);
 
-const handleSubmit = async (e) => {
-  e.preventDefault();
-  if (validateForm()) {
-    try {
-      const formDataToSend = new FormData();
-      const dataToSend = {
-        ...formData,
-        createdBy: userId || null,
-      };
-      formDataToSend.append("data", JSON.stringify(dataToSend));
-      if (file) {
-        formDataToSend.append("file", file);
-      }
-
-      console.log("Data being sent:", JSON.stringify(dataToSend, null, 2));
-
-      const response = await axios.post(
-        "http://localhost:8080/api/leads",
-        formDataToSend,
-        {
-          headers: { "Content-Type": "multipart/form-data" },
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (validateForm()) {
+      try {
+        const formDataToSend = new FormData();
+        const dataToSend = {
+          ...formData,
+          createdBy: userId || null,
+        };
+        formDataToSend.append("data", JSON.stringify(dataToSend));
+        if (file) {
+          formDataToSend.append("file", file);
         }
-      );
 
-      alert(
-        `Lead created successfully! Lead Number: ${response.data.leadNumber}`
-      );
-      resetForm();
-    } catch (error) {
-      console.error("Error saving data", error);
-      alert("Error saving data. Please try again.");
+        console.log("Data being sent:", JSON.stringify(dataToSend, null, 2));
+
+        const response = await axios.post(
+          "http://localhost:8080/api/leads",
+          formDataToSend,
+          {
+            headers: { "Content-Type": "multipart/form-data" },
+          }
+        );
+
+        alert(
+          `Lead created successfully! Lead Number: ${response.data.leadNumber}`
+        );
+        resetForm();
+      } catch (error) {
+        console.error("Error saving data", error);
+        alert("Error saving data. Please try again.");
+      }
     }
-  }
-};
-
+  };
 
   return (
     <div>
