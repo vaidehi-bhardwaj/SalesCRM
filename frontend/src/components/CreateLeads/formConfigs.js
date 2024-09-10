@@ -6,34 +6,32 @@ export const companyFormConfig = [
       name: "Lead Type",
       label: "Lead Type",
       type: "select",
-      options: "leadTypeOptions"
-    
+      options: "leadTypeOptions",
     },
     { name: "Generic email 1", label: "Generic email 1", type: "email" },
     {
       name: "Vertical",
       label: "Vertical",
       type: "select",
-      options: "verticalOptions"
+      options: "verticalOptions",
     },
   ],
   [
     {
       name: "Company Name",
       label: "Company Name",
-      type: "text"
-  
+      type: "text",
     },
     { name: "Generic email 2", label: "Generic email 2", type: "email" },
     {
       name: "Lead Assigned to",
       label: "Lead Assigned to",
       type: "select",
-      options: "leadAssignedToOptions"
+      options: "leadAssignedToOptions",
     },
   ],
   [
-    { name: "Website", label: "Website", type: "url"},
+    { name: "Website", label: "Website", type: "url" },
     { name: "Generic phone 1", label: "Generic phone 1", type: "tel" },
     { name: "BDM", label: "BDM", type: "select", options: "bdmOptions" },
   ],
@@ -48,7 +46,7 @@ export const companyFormConfig = [
     },
   ],
   [
-    { name: "City", label: "City", type: "text"},
+    { name: "City", label: "City", type: "text" },
     {
       name: "Lead Source",
       label: "Lead Source",
@@ -60,7 +58,6 @@ export const companyFormConfig = [
       label: "Priority",
       type: "select",
       options: "priorityOptions",
-    
     },
   ],
   [
@@ -69,10 +66,9 @@ export const companyFormConfig = [
       label: "State",
       type: "select",
       options: "stateOptions",
-    
     },
     {
-      name: "Total no. of offices",
+      name: "totalNoOfOffices",
       label: "Total no. of offices",
       type: "number",
     },
@@ -81,7 +77,7 @@ export const companyFormConfig = [
       label: "Next Action",
       type: "select",
       options: "nextActionOptions",
-  
+
       datePicker: { name: "dateField", label: "Date" },
     },
   ],
@@ -103,7 +99,6 @@ export const companyFormConfig = [
       label: "Lead Usable",
       type: "select",
       options: "leadUsableOptions",
-      
     },
   ],
   [
@@ -114,7 +109,7 @@ export const companyFormConfig = [
       options: "employeeCountOptions",
     },
     {
-      name: "Total no. of Manuf. Units",
+      name: "totalNoOfManufUnits",
       label: "Total no. of Manuf. Units",
       type: "number",
     },

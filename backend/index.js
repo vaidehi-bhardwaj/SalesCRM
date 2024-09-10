@@ -65,14 +65,14 @@ app.post("/api/leads", upload.single("file"), async (req, res) => {
         "Lead Source": parsedData.company["Lead Source"],
         Priority: parsedData.company.Priority,
         State: parsedData.company.State,
-        "Total no. of Offices": parsedData.company["Total no. of Offices"],
+        totalNoOfOffices: Number(parsedData.company.totalNoOfOffices),
         "Next Action": parsedData.company["Next Action"],
         Country: parsedData.company.Country,
         "Turn Over(INR)": parsedData.company["Turn Over(INR)"],
         "Lead Usable": parsedData.company["Lead Usable"],
         "Employee Count": parsedData.company["Employee Count"],
-        "Total no. of Manuf. Units":
-          parsedData.company["Total no. of Manuf. Units"],
+        totalNoOfManufUnits: Number(parsedData.company.totalNoOfManufUnits),
+
         Reason: parsedData.company.Reason,
         "About The Company": parsedData.company["About The Company"],
         dateField: parsedData.company.dateField,
@@ -238,8 +238,7 @@ app.put("/api/leads/:leadNumber", async (req, res) => {
       "Generic email 1": "Generic Email 1",
       "Generic phone 1": "Generic Phone 1",
       "Lead Assigned to": "Lead Assigned To",
-      "Total no. of Manuf. Units": "Total no. of Manuf. Units",
-      "Total no. of offices": "Total no. of Offices",
+     
       BDM: "BDM",
     };
 
@@ -274,12 +273,7 @@ app.put("/api/leads/:leadNumber", async (req, res) => {
     }
 
     // Ensure numeric fields are stored as numbers
-    lead.companyInfo["Total no. of Manuf. Units"] = Number(
-      lead.companyInfo["Total no. of Manuf. Units"]
-    );
-    lead.companyInfo["Total no. of Offices"] = Number(
-      lead.companyInfo["Total no. of Offices"]
-    );
+
 
     await lead.save();
     console.log("Lead after update:", JSON.stringify(lead, null, 2));

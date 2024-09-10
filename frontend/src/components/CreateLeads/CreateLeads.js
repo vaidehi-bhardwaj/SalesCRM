@@ -106,7 +106,19 @@ const CreateLeads = () => {
   }, []);
 
   const handleChange = useCallback((e, section, index) => {
-    const { name, value } = e.target;
+   
+     const { name, value } = e.target;
+     const parsedValue = ["totalNoOfOffices", "totalNoOfManufUnits"].includes(
+       name
+     )
+       ? Number(value)
+       : value;
+     setFormData((prevData) => ({
+       ...prevData,
+       [section]: { ...prevData[section], [name]: parsedValue },
+     }));
+
+
     setFormData((prevData) => {
       if (section === "additionalSections") {
         const newAdditionalSections = [...prevData.additionalSections];
