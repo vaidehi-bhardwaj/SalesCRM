@@ -130,57 +130,73 @@ const LeadDetails = ({ leadNumber, onClose, onUpdate }) => {
   if (error) return <div>Error: {error}</div>;
   if (!lead) return <div>No lead found</div>;
 
-  const renderFields = (config, section, subSection = null) => {
-    return Array.isArray(config)
-      ? config.map((row, rowIndex) => (
-          <div className="form-row-ld" key={rowIndex}>
-            {Array.isArray(row) &&
-              row.map((field) => (
-                <div className="form-group-ld" key={field.name}>
-                  <label>{field.label}:</label>
-                  {field.type === "select" ? (
-                    <select
-                      name={field.name}
-                      value={
-                        subSection
-                          ? editedLead?.[section]?.[subSection]?.[field.name] ||
-                            ""
-                          : editedLead?.[section]?.[field.name] || ""
-                      }
-                      onChange={(e) =>
-                        handleInputChange(e, section, subSection)
-                      }
-                      disabled={!editMode}
-                    >
-                      <option value="">Select {field.label}</option>
-                      {options[field.options]?.map((option, index) => (
-                        <option key={index} value={option}>
-                          {option}
-                        </option>
-                      ))}
-                    </select>
-                  ) : (
-                    <input
-                      type={field.type}
-                      name={field.name}
-                      value={
-                        subSection
-                          ? editedLead?.[section]?.[subSection]?.[field.name] ||
-                            ""
-                          : editedLead?.[section]?.[field.name] || ""
-                      }
-                      onChange={(e) =>
-                        handleInputChange(e, section, subSection)
-                      }
-                      disabled={!editMode}
-                    />
-                  )}
-                </div>
-              ))}
-          </div>
-        ))
-      : null;
-  };
+const renderFields = (config, section, subSection = null) => {
+  return Array.isArray(config)
+    ? config.map((row, rowIndex) => (
+        <div className="form-row-ld" key={rowIndex}>
+          {Array.isArray(row) &&
+            row.map((field) => (
+              <div
+                className="form-group-ld"
+                key={field.name}
+                style={{ display: "flex", alignItems: "center" }}
+              >
+                <label>{field.label}:</label>
+
+                {field.type === "select" ? (
+                  <select
+                    name={field.name}
+                    value={
+                      subSection
+                        ? editedLead?.[section]?.[subSection]?.[field.name] ||
+                          ""
+                        : editedLead?.[section]?.[field.name] || ""
+                    }
+                    onChange={(e) => handleInputChange(e, section, subSection)}
+                    disabled={!editMode}
+                    style={{ marginRight: "10px" }} // Add some space between select and date picker
+                  >
+                    <option value="">Select {field.label}</option>
+                    {options[field.options]?.map((option, index) => (
+                      <option key={index} value={option}>
+                        {option}
+                      </option>
+                    ))}
+                  </select>
+                ) : (
+                  <input
+                    type={field.type}
+                    name={field.name}
+                    value={
+                      subSection
+                        ? editedLead?.[section]?.[subSection]?.[field.name] ||
+                          ""
+                        : editedLead?.[section]?.[field.name] || ""
+                    }
+                    onChange={(e) => handleInputChange(e, section, subSection)}
+                    disabled={!editMode}
+                    style={{ marginRight: "10px" }} // Add space for alignment
+                  />
+                )}
+
+                {/* Render the date picker inline without label */}
+                {field.name === "Next Action" && field.datePicker && (
+                  <input
+                    type="date"
+                    name={field.datePicker.name}
+                    value={editedLead?.[section]?.[field.datePicker.name] || ""}
+                    onChange={(e) => handleInputChange(e, section, subSection)}
+                    disabled={!editMode}
+                    style={{ flex: "0 0 150px" }} // Adjust the size of the date input
+                  />
+                )}
+              </div>
+            ))}
+        </div>
+      ))
+    : null;
+};
+
 
   const renderContactFields = (role) => {
     const fields = [
