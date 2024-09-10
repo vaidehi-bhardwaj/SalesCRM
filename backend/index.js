@@ -26,10 +26,7 @@ app.use(bodyParser.json({ limit: "50mb" }));
 app.use(bodyParser.urlencoded({ limit: "50mb", extended: true }));
 
 // Middleware to log request size
-app.use((req, res, next) => {
-  console.log(`Request size: ${req.get("content-length")} bytes`);
-  next();
-});
+
 
 // Configure multer for file uploads with a limit of 50MB
 const upload = multer({
@@ -43,9 +40,9 @@ app.use("/api/options", OptionsRouter);
 // POST lead data with file upload
 app.post("/api/leads", upload.single("file"), async (req, res) => {
   try {
-    console.log("Incoming lead data:", req.body.data);
+    
     const parsedData = JSON.parse(req.body.data);
-    console.log("Parsed data:", JSON.stringify(parsedData, null, 2));
+   
 
     const leadData = {
       companyInfo: {
@@ -132,7 +129,7 @@ app.post("/api/leads", upload.single("file"), async (req, res) => {
 
     const lead = new Lead(leadData);
     const savedLead = await lead.save();
-    console.log("Saved lead:", JSON.stringify(savedLead, null, 2));
+    
 
     res.status(201).json({
       success: true,
@@ -140,7 +137,7 @@ app.post("/api/leads", upload.single("file"), async (req, res) => {
       leadNumber: savedLead.leadNumber,
     });
   } catch (error) {
-    console.error("Error creating lead:", error);
+    
     res.status(500).json({
       success: false,
       error: "Error creating lead",
@@ -153,7 +150,7 @@ app.post("/api/leads", upload.single("file"), async (req, res) => {
 app.get("/api/leads", async (req, res) => {
   try {
     const userId = req.query.userId;
-    console.log("Received request for leads. User ID:", userId);
+   
 
     if (!userId) {
       console.log("No user ID provided");
@@ -174,7 +171,7 @@ app.get("/api/leads", async (req, res) => {
       ],
     };
 
-    console.log("Query:", JSON.stringify(query));
+  
 
     const leads = await Lead.find(query, {
       leadNumber: 1,
@@ -196,8 +193,6 @@ app.get("/api/leads", async (req, res) => {
       .sort({ createdAt: -1 })
       .limit(10);
 
-    console.log("Leads found:", leads.length);
-    console.log("First lead (if any):", leads[0]);
 
     res.json(leads);
   } catch (error) {
@@ -230,8 +225,7 @@ app.put("/api/leads/:leadNumber", async (req, res) => {
       return res.status(404).json({ error: "Lead not found" });
     }
 
-    console.log("Received update data:", JSON.stringify(req.body, null, 2));
-    console.log("Lead before update:", JSON.stringify(lead, null, 2));
+   
 
     // Field mapping to handle case sensitivity and naming differences
     const fieldMapping = {
@@ -276,7 +270,7 @@ app.put("/api/leads/:leadNumber", async (req, res) => {
 
 
     await lead.save();
-    console.log("Lead after update:", JSON.stringify(lead, null, 2));
+ 
     res.json(lead);
   } catch (error) {
     console.error("Error updating lead:", error);
@@ -286,12 +280,12 @@ app.put("/api/leads/:leadNumber", async (req, res) => {
 
 // POST new description for a lead
 app.post("/api/leads/:leadNumber/descriptions", async (req, res) => {
-  console.log("Received request to add description:", req.params, req.body);
+ 
   try {
     const { leadNumber } = req.params;
     const { description, userId } = req.body;
 
-    console.log("Parsed data:", { leadNumber, description, userId });
+   
 
     if (!description || !userId) {
       return res.status(400).json({ error: "Missing required fields" });

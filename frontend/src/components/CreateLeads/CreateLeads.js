@@ -227,7 +227,6 @@ const CreateLeads = () => {
           formDataToSend.append("file", file);
         }
 
-        console.log("Data being sent:", JSON.stringify(dataToSend, null, 2));
 
         const response = await axios.post(
           "http://localhost:8080/api/leads",

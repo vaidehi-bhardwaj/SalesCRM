@@ -103,7 +103,7 @@ const LeadDetails = ({ leadNumber, onClose, onUpdate }) => {
  };
   const handleSave = async () => {
     try {
-      console.log("Sending update:", JSON.stringify(editedLead, null, 2));
+ 
       const leadToSave = {
         ...editedLead,
         itLandscape: {

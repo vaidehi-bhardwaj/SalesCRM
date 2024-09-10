@@ -38,7 +38,7 @@ function Login() {
        body: JSON.stringify(loginInfo),
      });
      const result = await response.json();
-     console.log("Server response:", result); // Log the entire response
+    // Log the entire response
 
      const { success, message, jwtToken, name, userId, error } = result;
      if (success) {

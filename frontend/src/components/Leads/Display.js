@@ -27,14 +27,14 @@ const Display = () => {
   useEffect(() => {
     const fetchLeads = async () => {
       try {
-        console.log("Fetching leads for user:", currentUserId);
+      
         const response = await axios.get(
           `http://localhost:8080/api/leads?userId=${currentUserId}`
         );
-        console.log("Response from server:", response);
+    
 
         if (response.data && Array.isArray(response.data)) {
-          console.log("Fetched leads:", response.data);
+      
           setLeads(response.data);
         } else {
           console.error(
