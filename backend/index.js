@@ -27,7 +27,6 @@ app.use(bodyParser.urlencoded({ limit: "50mb", extended: true }));
 
 // Middleware to log request size
 
-
 // Configure multer for file uploads with a limit of 50MB
 const upload = multer({
   limits: { fileSize: 50 * 1024 * 1024 }, // 50 MB file size limit
@@ -40,9 +39,7 @@ app.use("/api/options", OptionsRouter);
 // POST lead data with file upload
 app.post("/api/leads", upload.single("file"), async (req, res) => {
   try {
-    
     const parsedData = JSON.parse(req.body.data);
-   
 
     const leadData = {
       companyInfo: {
@@ -97,6 +94,7 @@ app.post("/api/leads", upload.single("file"), async (req, res) => {
           description: parsedData.description,
           selectedOption: parsedData.selectedOption,
           radioValue: parsedData.radioValue,
+          addedBy: parsedData.createdBy,
         },
       ],
       createdBy: parsedData.createdBy,
@@ -129,15 +127,13 @@ app.post("/api/leads", upload.single("file"), async (req, res) => {
 
     const lead = new Lead(leadData);
     const savedLead = await lead.save();
-    
-
+ await savedLead.populate("descriptions.addedBy", "name");
     res.status(201).json({
       success: true,
       message: "Lead created successfully",
       leadNumber: savedLead.leadNumber,
     });
   } catch (error) {
-    
     res.status(500).json({
       success: false,
       error: "Error creating lead",
@@ -150,7 +146,6 @@ app.post("/api/leads", upload.single("file"), async (req, res) => {
 app.get("/api/leads", async (req, res) => {
   try {
     const userId = req.query.userId;
-   
 
     if (!userId) {
       console.log("No user ID provided");
@@ -170,8 +165,6 @@ app.get("/api/leads", async (req, res) => {
         { "companyInfo.Lead Assigned To": { $in: [userId, user.name] } },
       ],
     };
-
-  
 
     const leads = await Lead.find(query, {
       leadNumber: 1,
@@ -193,7 +186,6 @@ app.get("/api/leads", async (req, res) => {
       .sort({ createdAt: -1 })
       .limit(10);
 
-
     res.json(leads);
   } catch (error) {
     console.error("Error fetching leads:", error);
@@ -208,7 +200,9 @@ app.get("/api/leads", async (req, res) => {
 // GET lead by lead number
 app.get("/api/leads/:leadNumber", async (req, res) => {
   try {
-    const lead = await Lead.findOne({ leadNumber: req.params.leadNumber });
+    const lead = await Lead.findOne({ leadNumber: req.params.leadNumber })
+      .populate("descriptions.addedBy", "name")
+      .populate("createdBy", "name");
     if (!lead) {
       return res.status(404).json({ error: "Lead not found" });
     }
@@ -217,7 +211,6 @@ app.get("/api/leads/:leadNumber", async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
-
 app.put("/api/leads/:leadNumber", async (req, res) => {
   try {
     const lead = await Lead.findOne({ leadNumber: req.params.leadNumber });
@@ -225,14 +218,12 @@ app.put("/api/leads/:leadNumber", async (req, res) => {
       return res.status(404).json({ error: "Lead not found" });
     }
 
-   
-
     // Field mapping to handle case sensitivity and naming differences
     const fieldMapping = {
       "Generic email 1": "Generic Email 1",
       "Generic phone 1": "Generic Phone 1",
       "Lead Assigned to": "Lead Assigned To",
-     
+
       BDM: "BDM",
     };
 
@@ -268,9 +259,8 @@ app.put("/api/leads/:leadNumber", async (req, res) => {
 
     // Ensure numeric fields are stored as numbers
 
-
     await lead.save();
- 
+
     res.json(lead);
   } catch (error) {
     console.error("Error updating lead:", error);
@@ -280,12 +270,9 @@ app.put("/api/leads/:leadNumber", async (req, res) => {
 
 // POST new description for a lead
 app.post("/api/leads/:leadNumber/descriptions", async (req, res) => {
- 
   try {
     const { leadNumber } = req.params;
     const { description, userId } = req.body;
-
-   
 
     if (!description || !userId) {
       return res.status(400).json({ error: "Missing required fields" });

@@ -23,7 +23,7 @@ const LeadDetails = ({ leadNumber, onClose, onUpdate }) => {
           `http://localhost:8080/api/leads/${leadNumber}`
         );
         setLead(response.data);
-        setEditedLead(JSON.parse(JSON.stringify(response.data))); 
+        setEditedLead(JSON.parse(JSON.stringify(response.data)));
       } catch (err) {
         setError(
           err.message || "An error occurred while fetching lead details"
