@@ -34,17 +34,19 @@ function Header() {
     setUserId(localStorage.getItem("userId"));
   }, []);
 
-  const handleLogout = (e) => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("loggedInUser");
-    localStorage.removeItem("userId");
-    handleSuccess("User Logged out");
-    setTimeout(() => {
-      navigate("/login", { replace: true });
-      window.location.reload();
-    }, 1000);
-  };
+ const handleLogout = (e) => {
+   // Remove all items stored during login
+   localStorage.removeItem("token");
+   localStorage.removeItem("loggedInUser");
+   localStorage.removeItem("userId");
+   localStorage.removeItem("userRole");
 
+   handleSuccess("User Logged out");
+   setTimeout(() => {
+     navigate("/login", { replace: true });
+     window.location.reload();
+   }, 1000);
+ };
   const handleDocumentClick = (event) => {
     if (!event.target.closest(".dropdown")) {
       setOpenDropdown(null);

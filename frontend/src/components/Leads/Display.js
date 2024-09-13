@@ -25,16 +25,27 @@ const Display = () => {
     setRefreshTrigger((prev) => prev + 1); // Trigger a refresh when a lead is updated
   };
   useEffect(() => {
+    const token = localStorage.getItem("token");
+    const userRole = localStorage.getItem("userRole");
+    console.log("Current user role:", userRole); // Add this line
+
+    if (!token) {
+      setError("No authentication token found. Please log in again.");
+      setLoading(false);
+      return;
+    }
     const fetchLeads = async () => {
       try {
-      
         const response = await axios.get(
-          `http://localhost:8080/api/leads?userId=${currentUserId}`
+          `http://localhost:8080/api/leads?userId=${currentUserId}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`, // Include the token in the request headers
+            },
+          }
         );
-    
 
         if (response.data && Array.isArray(response.data)) {
-      
           setLeads(response.data);
         } else {
           console.error(
@@ -54,6 +65,7 @@ const Display = () => {
         setLoading(false);
       }
     };
+
 
     fetchLeads();
   }, [refreshTrigger, currentUserId]);

@@ -6,7 +6,7 @@ import "./Login.css";
 import logo from "./logo.png";
 import map from "./map.png";
 
-function Login() {
+function Login({ setIsAuthenticated, setUserRole }) {
   const [loginInfo, setLoginInfo] = useState({
     email: "",
     password: "",
@@ -22,49 +22,70 @@ function Login() {
     }));
   };
 
- const handleLogin = async (e) => {
-   e.preventDefault();
-   const { email, password } = loginInfo;
-   if (!email || !password) {
-     return handleError("Email and password are required");
-   }
-   try {
-     const url = `http://localhost:8080/auth/login`;
-     const response = await fetch(url, {
-       method: "POST",
-       headers: {
-         "Content-Type": "application/json",
-       },
-       body: JSON.stringify(loginInfo),
-     });
-     const result = await response.json();
-    // Log the entire response
+  const handleLogin = async (e) => {
+    e.preventDefault();
+    const { email, password } = loginInfo;
+    if (!email || !password) {
+      return handleError("Email and password are required");
+    }
+    try {
+      const url = `http://localhost:8080/auth/login`;
+      const response = await fetch(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(loginInfo),
+      });
+      const result = await response.json();
 
-     const { success, message, jwtToken, name, userId, error } = result;
-     if (success) {
-       handleSuccess(message);
-       localStorage.setItem("token", jwtToken);
-       localStorage.setItem("loggedInUser", name);
-       if (userId) {
-         localStorage.setItem("userId", userId);
-       } else {
-         console.error("userId is undefined in the server response");
-       }
-       setTimeout(() => {
-         navigate("/home");
-       }, 1000);
-     } else if (error) {
-       const details = error?.details[0].message;
-       handleError(details);
-     } else {
-       handleError(message);
-     }
-   } catch (err) {
-     console.error("Login error:", err);
-     handleError(err.message);
-   }
- };
- 
+      console.log("Login response:", result);
+
+      const { success, message, jwtToken, name, userId, role, error } = result;
+      if (success) {
+        handleSuccess(message);
+        localStorage.setItem("token", jwtToken);
+        localStorage.setItem("loggedInUser", name);
+        localStorage.setItem("userId", userId);
+        localStorage.setItem("userRole", role);
+
+        setIsAuthenticated(true);
+        setUserRole(role);
+
+        console.log("Stored role:", role);
+        console.log("localStorage after setting:", {
+          token: localStorage.getItem("token"),
+          loggedInUser: localStorage.getItem("loggedInUser"),
+          userId: localStorage.getItem("userId"),
+          userRole: localStorage.getItem("userRole"),
+        });
+        setTimeout(() => {
+          // Redirect based on user role
+          switch (role.toLowerCase()) {
+            case "admin":
+              navigate("/admin/dashboard");
+              break;
+            case "supervisor":
+              navigate("/supervisor/dashboard");
+              break;
+            case "subuser":
+            default:
+              navigate("/home");
+              break;
+          }
+        }, 1000);
+      } else if (error) {
+        const details = error?.details[0].message;
+        handleError(details);
+      } else {
+        handleError(message);
+      }
+    } catch (err) {
+      console.error("Login error:", err);
+      handleError(err.message);
+    }
+  };
+
   return (
     <div className="login-page">
       <header className="header" />

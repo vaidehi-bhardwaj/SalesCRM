@@ -20,14 +20,17 @@ const UserSchema = new Schema({
     required: true,
     unique: true,
   },
+  role: {
+    type: String,
+    enum: ["subuser", "supervisor", "admin"],
+    default: "subuser",
+  },
+  supervisor: {
+    type: Schema.Types.ObjectId,
+    ref: "User",
+    default: null,
+  },
 });
 
 const UserModel = mongoose.model("user", UserSchema);
 module.exports = UserModel;
-
-
-// {
-//     "name": "Teshni Mahur",
-//     "email": "tjsmahur@gmail.com",
-//     "password": "password789"
-//   }

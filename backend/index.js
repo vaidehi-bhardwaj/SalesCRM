@@ -8,6 +8,7 @@ const Lead = require("./Models/createLeads");
 const multer = require("multer");
 const User = require("./Models/User");
 const mongoose = require("mongoose");
+const jwt = require("jsonwebtoken");
 // CORS configuration
 const corsOptions = {
   origin: "http://localhost:3000",
@@ -36,10 +37,40 @@ const upload = multer({
 app.use("/auth", AuthRouter);
 app.use("/api/options", OptionsRouter);
 
+const authenticateToken = (req, res, next) => {
+  const authHeader = req.headers["authorization"];
+  const token = authHeader && authHeader.split(" ")[1];
+
+  if (token == null) return res.sendStatus(401);
+
+  jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
+    console.log("Token verification - error:", err);
+    console.log("Token verification - user:", user);
+    if (err) return res.sendStatus(403);
+    req.user = user;
+    next();
+  });
+};
+
+const checkRole = (roles) => (req, res, next) => {
+  if (!req.user) {
+    return res.status(401).json({ error: "Unauthorized" });
+  }
+  if (roles.includes(req.user.role)) {
+    next();
+  } else {
+    res.status(403).json({ error: "Forbidden" });
+  }
+};
+
 // POST lead data with file upload
 app.post("/api/leads", upload.single("file"), async (req, res) => {
   try {
+    console.log("Received lead data:", req.body);
+    console.log("Received file:", req.file);
+
     const parsedData = JSON.parse(req.body.data);
+    console.log("Parsed lead data:", parsedData);
 
     const leadData = {
       companyInfo: {
@@ -126,8 +157,10 @@ app.post("/api/leads", upload.single("file"), async (req, res) => {
     }
 
     const lead = new Lead(leadData);
+    console.log("Lead object created:", lead);
     const savedLead = await lead.save();
- await savedLead.populate("descriptions.addedBy", "name");
+    console.log("Lead saved successfully:", savedLead);
+    await savedLead.populate("descriptions.addedBy", "name");
     res.status(201).json({
       success: true,
       message: "Lead created successfully",
@@ -142,60 +175,127 @@ app.post("/api/leads", upload.single("file"), async (req, res) => {
   }
 });
 
-// GET all leads with specific fields and a limit of 10 results
-app.get("/api/leads", async (req, res) => {
+// Helper function to safely convert string to ObjectId
+const safeObjectId = (id) => {
   try {
-    const userId = req.query.userId;
-
-    if (!userId) {
-      console.log("No user ID provided");
-      return res.status(400).json({ error: "User ID is required" });
-    }
-
-    // Fetch the user to get their name
-    const user = await User.findById(userId);
-    if (!user) {
-      console.log("User not found");
-      return res.status(404).json({ error: "User not found" });
-    }
-
-    const query = {
-      $or: [
-        { createdBy: new mongoose.Types.ObjectId(userId) },
-        { "companyInfo.Lead Assigned To": { $in: [userId, user.name] } },
-      ],
-    };
-
-    const leads = await Lead.find(query, {
-      leadNumber: 1,
-      "companyInfo.Company Name": 1,
-      "companyInfo.Lead Assigned To": 1,
-      "companyInfo.Generic Phone 1": 1,
-      "companyInfo.Generic Phone 2": 1,
-      "companyInfo.Priority": 1,
-      "companyInfo.Next Action": 1,
-      "companyInfo.dateField": 1,
-      "contactInfo.it.name": 1,
-      "contactInfo.it.email": 1,
-      "itLandscape.netNew.Using ERP (y/n)": 1,
-      descriptions: 1,
-      createdAt: 1,
-      createdBy: 1,
-    })
-      .populate("createdBy", "name")
-      .sort({ createdAt: -1 })
-      .limit(10);
-
-    res.json(leads);
+    return mongoose.Types.ObjectId(id);
   } catch (error) {
-    console.error("Error fetching leads:", error);
-    res.status(500).json({
-      success: false,
-      error: "Error fetching leads",
-      details: error.message,
-    });
+    console.warn(`Invalid ObjectId: ${id}`);
+    return id; // Return the original string if conversion fails
   }
-});
+};
+
+app.get(
+  "/api/leads",
+  authenticateToken,
+  checkRole(["subuser", "supervisor", "admin"]),
+  async (req, res) => {
+    try {
+      console.log("User object from request:", req.user);
+
+      const userId = req.user?._id;
+      const userRole = req.user?.role;
+      const userName = req.user?.name;
+
+      console.log("Extracted user data:", { userId, userRole, userName });
+
+      if (!userId || !userName || !userRole) {
+        console.error("Invalid user data:", { userId, userRole, userName });
+        return res.status(400).json({
+          success: false,
+          error: "Invalid user data",
+          details: { userId, userRole, userName },
+        });
+      }
+
+      let query = {};
+
+      if (userRole === "admin") {
+        // Admin can see all leads, so we don't need to filter
+        console.log("Admin user - fetching all leads");
+      } else {
+        let usersToInclude = [userName];
+        let userIds = [safeObjectId(userId)];
+
+        if (userRole === "supervisor") {
+          const subusers = await User.find({
+            supervisor: safeObjectId(userId),
+            role: "subuser",
+          }).select("_id name");
+          console.log("Fetched subusers:", subusers);
+
+          if (subusers.length > 0) {
+            const subuserNames = subusers
+              .map((user) => user.name)
+              .filter(Boolean);
+            const subuserIds = subusers.map((user) => user._id).filter(Boolean);
+            usersToInclude = [...usersToInclude, ...subuserNames];
+            userIds = [...userIds, ...subuserIds];
+          }
+        }
+
+        console.log("Users to Include (User + Subusers):", usersToInclude);
+        console.log("User IDs to Include:", userIds);
+
+        query = {
+          $or: [
+            { createdBy: { $in: userIds } },
+            { "companyInfo.Lead Assigned To": { $in: usersToInclude } },
+            { createdBy: safeObjectId(userId) },
+            { "companyInfo.Lead Assigned To": userName },
+          ],
+        };
+      }
+
+      console.log("Query:", JSON.stringify(query, null, 2));
+
+      const leads = await Lead.find(query, {
+        leadNumber: 1,
+        "companyInfo.Company Name": 1,
+        "companyInfo.Lead Assigned To": 1,
+        "companyInfo.Generic Phone 1": 1,
+        "companyInfo.Generic Phone 2": 1,
+        "companyInfo.Priority": 1,
+        "companyInfo.Next Action": 1,
+        "companyInfo.dateField": 1,
+        "contactInfo.it.name": 1,
+        "contactInfo.it.email": 1,
+        "itLandscape.netNew.Using ERP (y/n)": 1,
+        descriptions: 1,
+        createdAt: 1,
+        createdBy: 1,
+      })
+        .populate({
+          path: "createdBy",
+          select: "name",
+        })
+        .sort({ createdAt: -1 })
+        .limit(userRole === "admin" ? 0 : 10); // Remove limit for admin users
+
+      const filteredLeads = leads.filter((lead) => lead.createdBy !== null);
+
+      console.log("Fetched Leads count:", filteredLeads.length);
+      console.log(
+        "Fetched Leads:",
+        filteredLeads.map((lead) => ({
+          leadNumber: lead.leadNumber,
+          createdBy: lead.createdBy ? lead.createdBy.name : "Unknown",
+          assignedTo: lead.companyInfo["Lead Assigned To"],
+        }))
+      );
+
+      res.json(filteredLeads);
+    } catch (error) {
+      console.error("Error in /api/leads route:", error);
+      res.status(500).json({
+        success: false,
+        error: "Error fetching leads",
+        details: error.message,
+        stack: error.stack,
+      });
+    }
+  }
+);
 
 // GET lead by lead number
 app.get("/api/leads/:leadNumber", async (req, res) => {
@@ -342,6 +442,52 @@ app.get("/api/users/:userId", async (req, res) => {
       error: "Error fetching user",
       details: error.message,
     });
+  }
+});
+
+// app.get(
+//   "/api/leads/supervisor",
+//   authenticateToken,
+//   checkRole(["supervisor", "admin"]),
+//   async (req, res) => {
+//     try {
+//       const supervisorId = req.user._id; // The supervisor's ObjectId
+
+//       // Find all subusers under this supervisor
+//       const subuserIds = await User.find({ supervisor: supervisorId }).distinct(
+//         "_id"
+//       );
+
+//       // Combine the supervisor's ID and the subuser IDs
+//       const usersToInclude = [supervisorId, ...subuserIds];
+// console.log("Users to include in lead search:", usersToInclude);
+
+//       // Query leads where either the supervisor or their subusers are involved
+//       const leads = await Lead.find({
+//         $or: [
+//           { createdBy: { $in: usersToInclude } }, // Leads created by supervisor or subusers
+//           { "companyInfo.Lead Assigned To": { $in: usersToInclude } }, // Leads assigned to supervisor or subusers
+//         ],
+//       })
+//         .populate("createdBy", "name")
+//         .sort({ createdAt: -1 }); // Sort by most recent first
+
+//       res.json(leads);
+//     } catch (error) {
+//       console.error("Error fetching supervisor leads:", error);
+//       res
+//         .status(500)
+//         .json({ error: "Error fetching leads", details: error.message });
+//     }
+//   }
+// );
+
+app.get("/api/admin/users", checkRole(["admin"]), async (req, res) => {
+  try {
+    const users = await User.find({}, "-password");
+    res.json(users);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
   }
 });
 
