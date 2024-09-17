@@ -9,36 +9,53 @@ import map from "../Login/map.png";
 function ResetPassword() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const { token } = useParams();
+  const [isLoading, setIsLoading] = useState(false);
+  const { token } = useParams(); // Extract token if available
   const navigate = useNavigate();
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (password !== confirmPassword) {
-      return handleError("Passwords do not match");
+const handleSubmit = async (e) => {
+  e.preventDefault();
+
+  if (password !== confirmPassword) {
+    return handleError("Passwords do not match");
+  }
+
+  setIsLoading(true);
+
+  try {
+    const url = token
+      ? "http://localhost:8080/auth/reset-password"
+      : "http://localhost:8080/auth/change-password"; // Use new route for logged-in users
+
+    const userId = localStorage.getItem("userId"); // Get the logged-in user's ID from local storage
+
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(
+        token
+          ? { token, password }
+          : { userId, newPassword: password }
+      ), // Conditionally include userId
+    });
+
+    const data = await response.json();
+
+    if (data.success) {
+      handleSuccess("Password reset successfully");
+      setTimeout(() => navigate("/login"), 2000);
+    } else {
+      handleError(data.message);
     }
-    try {
-      const response = await fetch(
-        "http://localhost:8080/auth/reset-password",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ token, password }),
-        }
-      );
-      const data = await response.json();
-      if (data.success) {
-        handleSuccess("Password reset successfully");
-        setTimeout(() => navigate("/login"), 2000);
-      } else {
-        handleError(data.message);
-      }
-    } catch (error) {
-      handleError("An error occurred. Please try again.");
-    }
-  };
+  } catch (error) {
+    handleError("An error occurred. Please try again.");
+  } finally {
+    setIsLoading(false);
+  }
+};
+
 
   return (
     <div className="reset-password-page">
@@ -75,8 +92,12 @@ function ResetPassword() {
                 />
               </div>
               <div className="form-group">
-                <button type="submit" className="btn-submit">
-                  Reset Password
+                <button
+                  type="submit"
+                  className="btn-submit"
+                  disabled={isLoading || password !== confirmPassword}
+                >
+                  {isLoading ? "Resetting..." : "Reset Password"}
                 </button>
               </div>
             </form>

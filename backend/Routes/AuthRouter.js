@@ -7,6 +7,7 @@ const { loginValidation } = require("../Middleware/AuthValidation");
 const {
   forgotPassword,
   resetPassword,
+  changePassword,
 } = require("../Controllers/AuthController");
 
 
@@ -74,6 +75,8 @@ router.post("/login", loginValidation, async (req, res) => {
 
 router.post("/forgot-password", forgotPassword);
 router.post("/reset-password", resetPassword);
+router.post("/change-password", changePassword);
+
 
 // Move this route to a separate router file
 router.get("/options", async (req, res) => {

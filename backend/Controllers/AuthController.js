@@ -111,10 +111,34 @@ const forgotPassword = async (req, res) => {
 const resetPassword = async (req, res) => {
   try {
     const { token, password } = req.body;
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const user = await UserModel.findById(decoded.id);
+
+    console.log("Received token:", token); // Log the token for debugging
+
+    if (!password) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Password is required" });
+    }
+
+    let decoded;
+    try {
+      decoded = jwt.verify(token, process.env.JWT_SECRET);
+      console.log("Decoded token:", decoded); // Log the decoded token
+    } catch (error) {
+      if (error.name === "TokenExpiredError") {
+        return res
+          .status(400)
+          .json({ success: false, message: "Token has expired" });
+      }
+      console.error("Token verification error:", error); // Log the error for better insight
+      return res.status(400).json({ success: false, message: "Invalid token" });
+    }
+
+    const user = await UserModel.findById(decoded._id);
     if (!user) {
-      return res.status(404).json({ success: false, message: 'User not found' });
+      return res
+        .status(404)
+        .json({ success: false, message: "User not found" });
     }
 
     const salt = await bcrypt.genSalt(10);
@@ -123,11 +147,41 @@ const resetPassword = async (req, res) => {
     user.password = hashedPassword;
     await user.save();
 
-    res.json({ success: true, message: 'Password reset successfully' });
+    res.json({ success: true, message: "Password reset successfully" });
   } catch (error) {
-    res.status(500).json({ success: false, message: 'Server error' });
+    console.error("Reset Password Error:", error);
+    res.status(500).json({ success: false, message: "Server error" });
   }
 };
 
-module.exports = { login, forgotPassword, resetPassword };
+const changePassword = async (req, res) => {
+  try {
+    const { userId, newPassword } = req.body;
+
+
+    const user = await UserModel.findById(userId);
+    if (!user) {
+      return res
+        .status(404)
+        .json({ success: false, message: "User not found" });
+    }
+
+ 
+
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(newPassword, salt);
+
+    user.password = hashedPassword;
+    await user.save();
+
+    res.json({ success: true, message: "Password changed successfully" });
+  } catch (error) {
+    console.error("Change Password Error:", error);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+};
+
+
+
+module.exports = { login, forgotPassword, resetPassword, changePassword };
 

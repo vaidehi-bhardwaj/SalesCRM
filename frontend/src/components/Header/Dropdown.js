@@ -27,7 +27,7 @@ function Dropdown({ name, items, isOpen, toggleDropdown }) {
         path = "/bi";
         break;
       case "Change Password":
-        path = "/reset-password/:token";
+        path = "/reset-password";
         break;
       default:
         break;
