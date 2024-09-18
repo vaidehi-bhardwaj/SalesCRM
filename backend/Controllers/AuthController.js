@@ -88,21 +88,17 @@ const forgotPassword = async (req, res) => {
     transporter.sendMail(mailOptions, (error, info) => {
       if (error) {
         console.error("Error sending email:", error);
-        console.log("Email User:", process.env.EMAIL_USER);
-        console.log("Email Pass:", process.env.EMAIL_PASS);
-
+     
         return res
           .status(500)
           .json({ success: false, message: "Error sending email" });
       }
-      console.log("Email sent:", info.response);
+
       res.json({ success: true, message: "Password reset link sent to email" });
     });
   } catch (error) {
     console.error("Server error:", error);
-    console.log("Email User:", process.env.EMAIL_USER);
-    console.log("Email Pass:", process.env.EMAIL_PASS);
-
+ 
     res.status(500).json({ success: false, message: "Server error" });
   }
 };
@@ -112,7 +108,7 @@ const resetPassword = async (req, res) => {
   try {
     const { token, password } = req.body;
 
-    console.log("Received token:", token); // Log the token for debugging
+    
 
     if (!password) {
       return res
@@ -123,7 +119,7 @@ const resetPassword = async (req, res) => {
     let decoded;
     try {
       decoded = jwt.verify(token, process.env.JWT_SECRET);
-      console.log("Decoded token:", decoded); // Log the decoded token
+      
     } catch (error) {
       if (error.name === "TokenExpiredError") {
         return res

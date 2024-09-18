@@ -39,8 +39,6 @@ function Login({ setIsAuthenticated, setUserRole }) {
       });
       const result = await response.json();
 
-      console.log("Login response:", result);
-
       const { success, message, jwtToken, name, userId, role, error } = result;
       if (success) {
         handleSuccess(message);
@@ -52,13 +50,6 @@ function Login({ setIsAuthenticated, setUserRole }) {
         setIsAuthenticated(true);
         setUserRole(role);
 
-        console.log("Stored role:", role);
-        console.log("localStorage after setting:", {
-          token: localStorage.getItem("token"),
-          loggedInUser: localStorage.getItem("loggedInUser"),
-          userId: localStorage.getItem("userId"),
-          userRole: localStorage.getItem("userRole"),
-        });
         setTimeout(() => {
           // Redirect based on user role
           switch (role.toLowerCase()) {

@@ -10,9 +10,6 @@ function RefreshHandler({ setIsAuthenticated, setUserRole }) {
     const token = localStorage.getItem("token");
     const userRole = localStorage.getItem("userRole");
 
-    console.log("RefreshHandler - token:", token);
-    console.log("RefreshHandler - userRole:", userRole);
-
     const publicPaths = ["/", "/login", "/forgot-password", "/reset-password"];
     const isPublicPath = publicPaths.some((path) =>
       location.pathname.startsWith(path)
@@ -22,33 +19,15 @@ function RefreshHandler({ setIsAuthenticated, setUserRole }) {
       setIsAuthenticated(true);
       setUserRole(userRole);
 
-      if (isPublicPath && !hasNavigated.current) {
-        let targetPath = "";
-        switch (userRole.toLowerCase()) {
-          case "admin":
-            targetPath = "/admin/dashboard";
-            break;
-          case "supervisor":
-            targetPath = "/supervisor/dashboard";
-            break;
-          default:
-            targetPath = "/home";
-        }
-
-        console.log("RefreshHandler - Navigating to:", targetPath);
-
-        if (location.pathname !== targetPath) {
-          hasNavigated.current = true;
-          navigate(targetPath, { replace: true });
-        }
-      }
+      // Do not force a redirect to a specific path
     } else {
       setIsAuthenticated(false);
       setUserRole(null);
 
+      // Only navigate to login if the user is on a protected path
       if (!isPublicPath && !hasNavigated.current) {
         hasNavigated.current = true;
-        navigate("/home", { replace: true });
+        navigate("/login", { replace: true });
       }
     }
   }, [location.pathname, navigate, setIsAuthenticated, setUserRole]);

@@ -17,6 +17,7 @@ import SupervisorDashboard from "./components/Dashboards/SupervisorDashboard";
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [userRole, setUserRole] = useState(null);
+  const [isLoading, setIsLoading] = useState(true); // Add a loading state
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -29,25 +30,24 @@ function App() {
       setIsAuthenticated(false);
       setUserRole(null);
     }
+
+    setIsLoading(false); // Set loading to false once the check is complete
   }, []);
 
   // Simplified PrivateRoute handling authentication and role check
   function PrivateRoute({ element, allowedRoles }) {
-    console.log("PrivateRoute - isAuthenticated:", isAuthenticated);
-    console.log("PrivateRoute - userRole:", userRole);
-    console.log("PrivateRoute - allowedRoles:", allowedRoles);
+    if (isLoading) {
+      return null; // Prevent rendering or redirecting while loading
+    }
 
     if (!isAuthenticated) {
-      console.log("PrivateRoute - Not authenticated, redirecting to login");
       return <Navigate to="/login" replace />;
     }
 
     if (!allowedRoles.includes(userRole)) {
-      console.log("PrivateRoute - User role not allowed, redirecting to login");
       return <Navigate to="/login" replace />;
     }
 
-    console.log("PrivateRoute - Access granted");
     return element;
   }
 
@@ -133,5 +133,8 @@ function App() {
     </div>
   );
 }
+
+
+
 
 export default App;

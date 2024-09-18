@@ -10,7 +10,7 @@ const Display = () => {
   const [selectedLead, setSelectedLead] = useState(null);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const currentUserId = localStorage.getItem("userId");
-  console.log("Current User ID:", currentUserId);
+
 
   const handleLeadClick = (leadNumber) => {
     setSelectedLead(leadNumber);
@@ -27,7 +27,7 @@ const Display = () => {
   useEffect(() => {
     const token = localStorage.getItem("token");
     const userRole = localStorage.getItem("userRole");
-    console.log("Current user role:", userRole); // Add this line
+  
 
     if (!token) {
       setError("No authentication token found. Please log in again.");
