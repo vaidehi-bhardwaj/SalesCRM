@@ -14,6 +14,8 @@ import LeadDetails from "./components/Leads/LeadDetails";
 import AdminDashboard from "./components/Dashboards/AdminDashboard";
 import SupervisorDashboard from "./components/Dashboards/SupervisorDashboard";
 import AddUser from "./components/AddUser";
+import UserTable from "./components/UserTable";
+import ErrorBoundary from "./components/ErrorBoundary";
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -74,6 +76,14 @@ function App() {
           <Route path="/reset-password/:token" element={<ResetPassword />} />
           <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/add-user" element={<AddUser />} />
+          <Route
+            path="/user-table"
+            element={
+              <ErrorBoundary>
+                <UserTable />
+              </ErrorBoundary>
+            }
+          />
         </Route>
         <Route element={<LayoutWithHeader />}>
           <Route

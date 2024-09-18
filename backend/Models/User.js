@@ -28,16 +28,19 @@ const UserSchema = new Schema({
     required: true,
   },
   role: {
-    // User type
     type: String,
     enum: ["subuser", "supervisor", "admin"],
     default: "subuser",
   },
   supervisor: {
-    // User assigned to
     type: Schema.Types.ObjectId,
     ref: "User",
     default: null,
+  },
+  status: {
+    type: String,
+    enum: ["active", "inactive"],
+    default: "active",
   },
 });
 

@@ -11,6 +11,7 @@ const AddUser = () => {
     password: "",
     role: "subuser",
     supervisor: "",
+    status: "active", // New field
   });
 
   const handleChange = (e) => {
@@ -25,7 +26,6 @@ const AddUser = () => {
         formData
       );
       console.log("User added:", response.data);
-      // Clear form
       setFormData({
         firstName: "",
         lastName: "",
@@ -35,6 +35,7 @@ const AddUser = () => {
         password: "",
         role: "subuser",
         supervisor: "",
+        status: "active",
       });
     } catch (error) {
       console.error("Error adding user:", error);
@@ -103,6 +104,10 @@ const AddUser = () => {
         onChange={handleChange}
         placeholder="Supervisor ID (if any)"
       />
+      <select name="status" value={formData.status} onChange={handleChange}>
+        <option value="active">Active</option>
+        <option value="inactive">Inactive</option>
+      </select>
       <button type="submit">Add New User</button>
     </form>
   );

@@ -63,6 +63,23 @@ const checkRole = (roles) => (req, res, next) => {
   }
 };
 
+const checkUserStatus = async (req, res, next) => {
+  try {
+    const user = await User.findById(req.user.id);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    if (user.status === "inactive") {
+      return res
+        .status(403)
+        .json({ message: "Access denied. User is inactive." });
+    }
+    next();
+  } catch (error) {
+    res.status(500).json({ message: "Error checking user status", error });
+  }
+};
+
 // POST lead data with file upload
 app.post("/api/leads", upload.single("file"), async (req, res) => {
   try {
@@ -389,20 +406,7 @@ app.post("/api/leads/:leadNumber/descriptions", async (req, res) => {
 });
 
 // GET all users
-app.get("/api/users", async (req, res) => {
-  try {
-    const users = await User.find({}, { firstName: 1, _id: 0 });
-    const userNames = users.map((user) => user.firstName);
-    res.json(userNames);
-  } catch (error) {
-    console.error("Error fetching user names:", error);
-    res.status(500).json({
-      success: false,
-      error: "Error fetching user names",
-      details: error.message,
-    });
-  }
-});
+
 
 // Global error handler for PayloadTooLargeError
 app.use((err, req, res, next) => {
@@ -444,7 +448,6 @@ app.get("/api/admin/users", checkRole(["admin"]), async (req, res) => {
 
 app.post("/api/users", async (req, res) => {
   try {
-    // Log incoming request body to inspect the data being sent
     console.log("Request Body:", req.body);
 
     const {
@@ -456,23 +459,20 @@ app.post("/api/users", async (req, res) => {
       password,
       role,
       supervisor,
+      status,
     } = req.body;
 
-    // Check for missing fields
     if (!firstName || !lastName || !email || !password) {
       console.log("Missing required fields");
       return res.status(400).json({ error: "Missing required fields" });
     }
 
-    // Hash password
     console.log("Hashing password...");
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
-    // Log the hashed password
     console.log("Hashed Password:", hashedPassword);
 
-    // Create new user
     const newUser = new User({
       firstName,
       lastName,
@@ -482,25 +482,47 @@ app.post("/api/users", async (req, res) => {
       password: hashedPassword,
       role,
       supervisor: supervisor || null,
+      status: status || "active",
     });
 
-    // Log the user object before saving
     console.log("User to be saved:", newUser);
 
     const savedUser = await newUser.save();
 
-    // Log the response after saving
     console.log("User saved successfully:", savedUser);
 
     res.status(201).json(savedUser);
   } catch (error) {
-    // Log the error to identify the issue
     console.error("Error creating user:", error);
-    res.status(500).json({ error: error.message });
+    if (error.code === 11000) {
+      // Handle duplicate key error
+      res.status(400).json({
+        error: "Duplicate key error",
+        details: error.message,
+      });
+    } else {
+      res.status(500).json({ error: error.message });
+    }
   }
 });
 
 
+app.get("/api/users", async (req, res) => {
+  try {
+    const users = await User.find(
+      {},
+      { firstName: 1, lastName: 1, email: 1, role: 1, status: 1 }
+    );
+    res.json(users);
+  } catch (error) {
+    console.error("Error fetching users:", error);
+    res.status(500).json({
+      success: false,
+      error: "Error fetching user data",
+      details: error.message,
+    });
+  }
+});
 
 // Start the server
 app.listen(PORT, () => {
