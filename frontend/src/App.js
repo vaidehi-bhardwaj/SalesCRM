@@ -13,6 +13,7 @@ import Display from "./components/Leads/Display";
 import LeadDetails from "./components/Leads/LeadDetails";
 import AdminDashboard from "./components/Dashboards/AdminDashboard";
 import SupervisorDashboard from "./components/Dashboards/SupervisorDashboard";
+import AddUser from "./components/AddUser";
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -72,6 +73,7 @@ function App() {
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/reset-password/:token" element={<ResetPassword />} />
           <Route path="/reset-password" element={<ResetPassword />} />
+          <Route path="/add-user" element={<AddUser />} />
         </Route>
         <Route element={<LayoutWithHeader />}>
           <Route

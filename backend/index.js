@@ -9,6 +9,7 @@ const multer = require("multer");
 const User = require("./Models/User");
 const mongoose = require("mongoose");
 const jwt = require("jsonwebtoken");
+const bcrypt = require("bcrypt");
 // CORS configuration
 const corsOptions = {
   origin: "http://localhost:3000",
@@ -192,7 +193,7 @@ app.get(
 
       const userId = req.user?._id;
       const userRole = req.user?.role;
-      const userName = req.user?.name;
+      const userName = req.user?.firstName;
 
      
 
@@ -223,7 +224,7 @@ app.get(
 
           if (subusers.length > 0) {
             const subuserNames = subusers
-              .map((user) => user.name)
+              .map((user) => user.firstName)
               .filter(Boolean);
             const subuserIds = subusers.map((user) => user._id).filter(Boolean);
             usersToInclude = [...usersToInclude, ...subuserNames];
@@ -262,7 +263,7 @@ app.get(
       })
         .populate({
           path: "createdBy",
-          select: "name",
+          select: "firstName",
         })
         .sort({ createdAt: -1 })
         .limit(userRole === "admin" ? 0 : 10); // Remove limit for admin users
@@ -287,8 +288,8 @@ app.get(
 app.get("/api/leads/:leadNumber", async (req, res) => {
   try {
     const lead = await Lead.findOne({ leadNumber: req.params.leadNumber })
-      .populate("descriptions.addedBy", "name")
-      .populate("createdBy", "name");
+      .populate("descriptions.addedBy", "firstName")
+      .populate("createdBy", "firstName");
     if (!lead) {
       return res.status(404).json({ error: "Lead not found" });
     }
@@ -378,7 +379,7 @@ app.post("/api/leads/:leadNumber/descriptions", async (req, res) => {
     await lead.save();
 
     // Populate the user information
-    await lead.populate("descriptions.addedBy", "name");
+    await lead.populate("descriptions.addedBy", "firstName");
 
     res.json(lead);
   } catch (error) {
@@ -390,8 +391,8 @@ app.post("/api/leads/:leadNumber/descriptions", async (req, res) => {
 // GET all users
 app.get("/api/users", async (req, res) => {
   try {
-    const users = await User.find({}, { name: 1, _id: 0 });
-    const userNames = users.map((user) => user.name);
+    const users = await User.find({}, { firstName: 1, _id: 0 });
+    const userNames = users.map((user) => user.firstName);
     res.json(userNames);
   } catch (error) {
     console.error("Error fetching user names:", error);
@@ -440,6 +441,66 @@ app.get("/api/admin/users", checkRole(["admin"]), async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
+
+app.post("/api/users", async (req, res) => {
+  try {
+    // Log incoming request body to inspect the data being sent
+    console.log("Request Body:", req.body);
+
+    const {
+      firstName,
+      lastName,
+      designation,
+      email,
+      mobile,
+      password,
+      role,
+      supervisor,
+    } = req.body;
+
+    // Check for missing fields
+    if (!firstName || !lastName || !email || !password) {
+      console.log("Missing required fields");
+      return res.status(400).json({ error: "Missing required fields" });
+    }
+
+    // Hash password
+    console.log("Hashing password...");
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
+
+    // Log the hashed password
+    console.log("Hashed Password:", hashedPassword);
+
+    // Create new user
+    const newUser = new User({
+      firstName,
+      lastName,
+      designation,
+      email,
+      mobile,
+      password: hashedPassword,
+      role,
+      supervisor: supervisor || null,
+    });
+
+    // Log the user object before saving
+    console.log("User to be saved:", newUser);
+
+    const savedUser = await newUser.save();
+
+    // Log the response after saving
+    console.log("User saved successfully:", savedUser);
+
+    res.status(201).json(savedUser);
+  } catch (error) {
+    // Log the error to identify the issue
+    console.error("Error creating user:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+
 
 // Start the server
 app.listen(PORT, () => {

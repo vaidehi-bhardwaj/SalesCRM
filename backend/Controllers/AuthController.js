@@ -39,7 +39,7 @@ const login = async (req, res) => {
     success: true,
     jwtToken,
     email,
-    name: user.name,
+    firstName: user.firstName,
     userId: user._id, // Add this line to include the userId in the response
   });
   } catch (err) {
@@ -64,7 +64,7 @@ const forgotPassword = async (req, res) => {
    const token = jwt.sign(
      {
        _id: user._id,
-       name: user.name,
+       firstName: user.firstName,
        role: user.role,
      },
      process.env.JWT_SECRET,

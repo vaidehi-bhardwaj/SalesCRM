@@ -45,7 +45,7 @@ router.post("/login", loginValidation, async (req, res) => {
    const token = jwt.sign(
      {
        _id: user._id,
-       name: user.name,
+       firstName: user.firstName,
        role: user.role,
        email: user.email, // Optional, include if needed
      },
@@ -58,7 +58,7 @@ router.post("/login", loginValidation, async (req, res) => {
       success: true,
       message: "Login successful",
       jwtToken: token,
-      name: user.name,
+      firstName: user.firstName,
       userId: user._id,
       role: user.role,
     };

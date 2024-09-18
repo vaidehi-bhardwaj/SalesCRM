@@ -39,11 +39,11 @@ function Login({ setIsAuthenticated, setUserRole }) {
       });
       const result = await response.json();
 
-      const { success, message, jwtToken, name, userId, role, error } = result;
+      const { success, message, jwtToken, firstName, userId, role, error } = result;
       if (success) {
         handleSuccess(message);
         localStorage.setItem("token", jwtToken);
-        localStorage.setItem("loggedInUser", name);
+        localStorage.setItem("loggedInUser", firstName);
         localStorage.setItem("userId", userId);
         localStorage.setItem("userRole", role);
 

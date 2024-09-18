@@ -127,7 +127,7 @@ const Display = () => {
               <td>{new Date(lead.createdAt).toLocaleDateString()}</td>
               <td>{lead.companyInfo?.["Company Name"] || ""}</td>
               <td>{getLatestDescriptionDate(lead)}</td>
-              <td>{lead.createdBy?.name || ""}</td>
+              <td>{lead.createdBy?.firstName || ""}</td>
               <td>{getAssignedUser(lead)}</td>
               <td>{getPhoneNumbers(lead)}</td>
               <td>
