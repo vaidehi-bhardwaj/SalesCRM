@@ -34,7 +34,7 @@ const UserSchema = new Schema({
   },
   supervisor: {
     type: Schema.Types.ObjectId,
-    ref: "User",
+    ref: "user",
     default: null,
   },
   status: {
@@ -44,5 +44,5 @@ const UserSchema = new Schema({
   },
 });
 
-const UserModel = mongoose.model("user", UserSchema);
-module.exports = UserModel;
+const User = mongoose.model("user", UserSchema);
+module.exports = User;

@@ -1,15 +1,22 @@
 const express = require("express");
-const app = express();
 const bodyParser = require("body-parser");
 const cors = require("cors");
-const AuthRouter = require("./Routes/AuthRouter");
-const OptionsRouter = require("./Routes/OptionsRouter");
-const Lead = require("./Models/createLeads");
 const multer = require("multer");
-const User = require("./Models/User");
 const mongoose = require("mongoose");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
+
+const Lead = require("./Models/createLeads");
+const User = require("./Models/User");
+
+const AuthRouter = require("./Routes/AuthRouter");
+const OptionsRouter = require("./Routes/OptionsRouter");
+
+require("dotenv").config();
+require("./Models/db");
+
+const app = express();
+
 // CORS configuration
 const corsOptions = {
   origin: "http://localhost:3000",
@@ -18,20 +25,13 @@ const corsOptions = {
 };
 app.use(cors(corsOptions));
 
-require("dotenv").config();
-require("./Models/db");
-
-const PORT = process.env.PORT || 8080;
-
-// Configure body-parser with a payload limit of 50MB
+// Body-parser configuration
 app.use(bodyParser.json({ limit: "50mb" }));
 app.use(bodyParser.urlencoded({ limit: "50mb", extended: true }));
 
-// Middleware to log request size
-
-// Configure multer for file uploads with a limit of 50MB
+// File upload configuration
 const upload = multer({
-  limits: { fileSize: 50 * 1024 * 1024 }, // 50 MB file size limit
+  limits: { fileSize: 50 * 1024 * 1024 }, // 50MB limit
 });
 
 // Route handlers
@@ -45,7 +45,6 @@ const authenticateToken = (req, res, next) => {
   if (token == null) return res.sendStatus(401);
 
   jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
- 
     if (err) return res.sendStatus(403);
     req.user = user;
     next();
@@ -83,8 +82,6 @@ const checkUserStatus = async (req, res, next) => {
 // POST lead data with file upload
 app.post("/api/leads", upload.single("file"), async (req, res) => {
   try {
-   
-
     const parsedData = JSON.parse(req.body.data);
 
     const leadData = {
@@ -172,9 +169,9 @@ app.post("/api/leads", upload.single("file"), async (req, res) => {
     }
 
     const lead = new Lead(leadData);
-   
+
     const savedLead = await lead.save();
-  
+
     await savedLead.populate("descriptions.addedBy", "name");
     res.status(201).json({
       success: true,
@@ -206,13 +203,9 @@ app.get(
   checkRole(["subuser", "supervisor", "admin"]),
   async (req, res) => {
     try {
-   
-
       const userId = req.user?._id;
       const userRole = req.user?.role;
       const userName = req.user?.firstName;
-
-     
 
       if (!userId || !userName || !userRole) {
         console.error("Invalid user data:", { userId, userRole, userName });
@@ -227,7 +220,6 @@ app.get(
 
       if (userRole === "admin") {
         // Admin can see all leads, so we don't need to filter
-      
       } else {
         let usersToInclude = [userName];
         let userIds = [safeObjectId(userId)];
@@ -236,8 +228,7 @@ app.get(
           const subusers = await User.find({
             supervisor: safeObjectId(userId),
             role: "subuser",
-          }).select("_id name");
-      
+          }).select("_id firstName");
 
           if (subusers.length > 0) {
             const subuserNames = subusers
@@ -249,7 +240,6 @@ app.get(
           }
         }
 
-
         query = {
           $or: [
             { createdBy: { $in: userIds } },
@@ -259,8 +249,6 @@ app.get(
           ],
         };
       }
-
-    
 
       const leads = await Lead.find(query, {
         leadNumber: 1,
@@ -286,7 +274,6 @@ app.get(
         .limit(userRole === "admin" ? 0 : 10); // Remove limit for admin users
 
       const filteredLeads = leads.filter((lead) => lead.createdBy !== null);
-
 
       res.json(filteredLeads);
     } catch (error) {
@@ -407,7 +394,6 @@ app.post("/api/leads/:leadNumber/descriptions", async (req, res) => {
 
 // GET all users
 
-
 // Global error handler for PayloadTooLargeError
 app.use((err, req, res, next) => {
   if (err.type === "entity.too.large") {
@@ -418,24 +404,6 @@ app.use((err, req, res, next) => {
   }
   next(err);
 });
-
-app.get("/api/users/:userId", async (req, res) => {
-  try {
-    const user = await User.findById(req.params.userId, { name: 1, _id: 0 });
-    if (!user) {
-      return res.status(404).json({ error: "User not found" });
-    }
-    res.json(user);
-  } catch (error) {
-    console.error("Error fetching user:", error);
-    res.status(500).json({
-      success: false,
-      error: "Error fetching user",
-      details: error.message,
-    });
-  }
-});
-
 
 app.get("/api/admin/users", checkRole(["admin"]), async (req, res) => {
   try {
@@ -506,7 +474,6 @@ app.post("/api/users", async (req, res) => {
   }
 });
 
-
 app.get("/api/users", async (req, res) => {
   try {
     const users = await User.find(
@@ -524,7 +491,47 @@ app.get("/api/users", async (req, res) => {
   }
 });
 
-// Start the server
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
+app.put("/api/users/:userId", async (req, res) => {
+  try {
+    const user = await User.findByIdAndUpdate(req.params.userId, req.body, {
+      new: true,
+    });
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+    res.json(user);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
 });
+
+app.get("/api/users/:userId", async (req, res) => {
+  try {
+    const user = await User.findById(req.params.userId, {
+      firstName: 1,
+      lastName: 1,
+      designation: 1,
+      email: 1,
+      mobile: 1,
+      role: 1,
+      supervisor: 1,
+      status: 1,
+    }).populate("supervisor", "firstName lastName"); // Populating supervisor's details if available
+
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+    res.json(user);
+  } catch (error) {
+    console.error("Error fetching user:", error);
+    res.status(500).json({
+      success: false,
+      error: "Error fetching user",
+      details: error.message,
+    });
+  }
+});
+
+// Start the server
+const PORT = process.env.PORT || 8080;
+app.listen(PORT, () => console.log(`Server is running on port ${PORT}`));

@@ -158,8 +158,12 @@ const renderFields = (config, section, subSection = null) => {
                   >
                     <option value="">Select {field.label}</option>
                     {options[field.options]?.map((option, index) => (
-                      <option key={index} value={option}>
-                        {option}
+                      <option key={index} value={option._id || option}>
+                        {typeof option === "object" &&
+                        option.firstName &&
+                        option.lastName
+                          ? `${option.firstName} ${option.lastName}` // Display first and last names
+                          : option}
                       </option>
                     ))}
                   </select>
@@ -303,7 +307,7 @@ const renderFields = (config, section, subSection = null) => {
                   <tr key={index}>
                     <td>{desc.description}</td>
                     <td>{new Date(desc.createdAt).toLocaleString()}</td>
-                    <td>{desc.addedBy ? desc.addedBy.name : "Unknown"}</td>
+                    <td>{desc.addedBy ? desc.addedBy.firstName : "Unknown"}</td>
                   </tr>
                 ))}
             </tbody>

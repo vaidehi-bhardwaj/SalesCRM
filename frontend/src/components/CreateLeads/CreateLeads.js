@@ -22,8 +22,10 @@ const FormGroup = ({ field, formData, handleChange, errors, options }) => (
         >
           <option value="">Select {field.label}</option>
           {options[field.options]?.map((option, index) => (
-            <option key={index} value={option}>
-              {option}
+            <option key={index} value={option._id || option}>
+              {typeof option === "object" && option.firstName && option.lastName
+                ? `${option.firstName} ${option.lastName}` // Display first and last names
+                : option}
             </option>
           ))}
         </select>
