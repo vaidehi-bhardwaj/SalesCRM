@@ -1,116 +1,153 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import axios from "axios";
 
-const AddUser = () => {
-  const [formData, setFormData] = useState({
+const EditUserModal = ({ userId, onClose }) => {
+  const [userData, setUserData] = useState({
     firstName: "",
     lastName: "",
     designation: "",
     email: "",
     mobile: "",
-    password: "",
-    role: "subuser",
+    role: "",
     supervisor: "",
-    status: "active", // New field
+    status: "",
   });
 
-  const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+  useEffect(() => {
+    const fetchUserDetails = async () => {
+      try {
+        const response = await axios.get(
+          `http://localhost:8080/api/users/${userId}`
+        );
+        setUserData(response.data);
+      } catch (error) {
+        console.error("Error fetching user details:", error);
+      }
+    };
+
+    if (userId) {
+      fetchUserDetails();
+    }
+  }, [userId]);
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setUserData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
   };
 
-  const handleSubmit = async (e) => {
+  const handleFormSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await axios.post(
-        "http://localhost:8080/api/users",
-        formData
-      );
-      console.log("User added:", response.data);
-      setFormData({
-        firstName: "",
-        lastName: "",
-        designation: "",
-        email: "",
-        mobile: "",
-        password: "",
-        role: "subuser",
-        supervisor: "",
-        status: "active",
-      });
+      await axios.put(`http://localhost:8080/api/users/${userId}`, userData);
+      alert("User updated successfully!");
+      onClose();
     } catch (error) {
-      console.error("Error adding user:", error);
+      console.error("Error updating user:", error);
+      alert("Error updating user");
     }
   };
 
   return (
-    <form onSubmit={handleSubmit}>
-      <input
-        type="text"
-        name="firstName"
-        value={formData.firstName}
-        onChange={handleChange}
-        placeholder="First Name"
-        required
-      />
-      <input
-        type="text"
-        name="lastName"
-        value={formData.lastName}
-        onChange={handleChange}
-        placeholder="Last Name"
-        required
-      />
-      <input
-        type="text"
-        name="designation"
-        value={formData.designation}
-        onChange={handleChange}
-        placeholder="Designation"
-        required
-      />
-      <input
-        type="email"
-        name="email"
-        value={formData.email}
-        onChange={handleChange}
-        placeholder="Email"
-        required
-      />
-      <input
-        type="text"
-        name="mobile"
-        value={formData.mobile}
-        onChange={handleChange}
-        placeholder="Mobile"
-        required
-      />
-      <input
-        type="password"
-        name="password"
-        value={formData.password}
-        onChange={handleChange}
-        placeholder="Password"
-        required
-      />
-      <select name="role" value={formData.role} onChange={handleChange}>
-        <option value="subuser">Subuser</option>
-        <option value="supervisor">Supervisor</option>
-        <option value="admin">Admin</option>
-      </select>
-      <input
-        type="text"
-        name="supervisor"
-        value={formData.supervisor}
-        onChange={handleChange}
-        placeholder="Supervisor ID (if any)"
-      />
-      <select name="status" value={formData.status} onChange={handleChange}>
-        <option value="active">Active</option>
-        <option value="inactive">Inactive</option>
-      </select>
-      <button type="submit">Add New User</button>
-    </form>
+    <>
+     
+      <form className="user-form" onSubmit={handleFormSubmit}>
+        <div className="user-form-group">
+          <label htmlFor="firstName">First Name</label>
+          <input
+            id="firstName"
+            type="text"
+            name="firstName"
+            value={userData.firstName}
+            onChange={handleInputChange}
+            required
+          />
+          <label htmlFor="lastName">Last Name</label>
+          <input
+            id="lastName"
+            type="text"
+            name="lastName"
+            value={userData.lastName}
+            onChange={handleInputChange}
+            required
+          />
+        </div>
+        <div className="user-form-group">
+          <label htmlFor="designation">Designation</label>
+          <input
+            id="designation"
+            type="text"
+            name="designation"
+            value={userData.designation}
+            onChange={handleInputChange}
+            required
+          />
+          <label htmlFor="email">Email</label>
+          <input
+            id="email"
+            type="email"
+            name="email"
+            value={userData.email}
+            onChange={handleInputChange}
+            required
+          />
+        </div>
+        <div className="user-form-group">
+          <label htmlFor="mobile">Mobile</label>
+          <input
+            id="mobile"
+            type="text"
+            name="mobile"
+            value={userData.mobile}
+            onChange={handleInputChange}
+            required
+          />
+          <label htmlFor="role">Role</label>
+          <select
+            id="role"
+            name="role"
+            value={userData.role}
+            onChange={handleInputChange}
+          >
+            <option value="subuser">Subuser</option>
+            <option value="supervisor">Supervisor</option>
+            <option value="admin">Admin</option>
+          </select>
+        </div>
+        <div className="user-form-group">
+          <label htmlFor="supervisor">Supervisor ID</label>
+          <input
+            id="supervisor"
+            type="text"
+            name="supervisor"
+            value={userData.supervisor}
+            onChange={handleInputChange}
+            placeholder="(if any)"
+          />
+          <label htmlFor="status">Status</label>
+          <select
+            id="status"
+            name="status"
+            value={userData.status}
+            onChange={handleInputChange}
+          >
+            <option value="active">Active</option>
+            <option value="inactive">Inactive</option>
+          </select>
+        </div>
+        <div className="user-form-group full-width">
+          <button className="edit-btn" type="submit">
+            Save Changes
+          </button>
+          <button className="close-btn" type="button" onClick={onClose}>
+            Cancel
+          </button>
+        </div>
+      </form>
+    </>
   );
 };
 
-export default AddUser;
+export default EditUserModal;

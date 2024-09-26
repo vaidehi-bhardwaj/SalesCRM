@@ -1,4 +1,3 @@
-// EditUserModal.js
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 
@@ -43,7 +42,7 @@ const EditUserModal = ({ userId, onClose }) => {
     try {
       await axios.put(`http://localhost:8080/api/users/${userId}`, userData);
       alert("User updated successfully!");
-      onClose(); // Close the modal after successful update
+      onClose();
     } catch (error) {
       console.error("Error updating user:", error);
       alert("Error updating user");
@@ -51,52 +50,73 @@ const EditUserModal = ({ userId, onClose }) => {
   };
 
   return (
-    <div className="modal">
-      <h2>Edit User</h2>
-      <form onSubmit={handleFormSubmit}>
-        <label>First Name:</label>
+    <form className="user-form" onSubmit={handleFormSubmit}>
+      <div className="user-form-group">
+        <label htmlFor="firstName">First Name</label>
         <input
+          id="firstName"
           type="text"
           name="firstName"
           value={userData.firstName}
           onChange={handleInputChange}
+          required
         />
-        <label>Last Name:</label>
+        <label htmlFor="lastName">Last Name</label>
         <input
+          id="lastName"
           type="text"
           name="lastName"
           value={userData.lastName}
           onChange={handleInputChange}
+          required
         />
-        <label>Designation:</label>
+      </div>
+      <div className="user-form-group">
+        <label htmlFor="designation">Designation</label>
         <input
+          id="designation"
           type="text"
           name="designation"
           value={userData.designation}
           onChange={handleInputChange}
+          required
         />
-        <label>Email:</label>
+        <label htmlFor="email">Email</label>
         <input
+          id="email"
           type="email"
           name="email"
           value={userData.email}
           onChange={handleInputChange}
+          required
         />
-        <label>Mobile:</label>
+      </div>
+      <div className="user-form-group">
+        <label htmlFor="mobile">Mobile</label>
         <input
+          id="mobile"
           type="text"
           name="mobile"
           value={userData.mobile}
           onChange={handleInputChange}
+          required
         />
-        <label>Role:</label>
-        <select name="role" value={userData.role} onChange={handleInputChange}>
+        <label htmlFor="role">Role</label>
+        <select
+          id="role"
+          name="role"
+          value={userData.role}
+          onChange={handleInputChange}
+        >
           <option value="subuser">Subuser</option>
           <option value="supervisor">Supervisor</option>
           <option value="admin">Admin</option>
         </select>
-        <label>Status:</label>
+      </div>
+      <div className="user-form-group">
+        <label htmlFor="status">Status</label>
         <select
+          id="status"
           name="status"
           value={userData.status}
           onChange={handleInputChange}
@@ -104,12 +124,16 @@ const EditUserModal = ({ userId, onClose }) => {
           <option value="active">Active</option>
           <option value="inactive">Inactive</option>
         </select>
-        <button type="submit">Save Changes</button>
-        <button type="button" onClick={onClose}>
+      </div>
+      <div className="user-form-group full-width">
+        <button className="edit-btn" type="submit">
+          Save Changes
+        </button>
+        <button className="close-btn" type="button" onClick={onClose}>
           Cancel
         </button>
-      </form>
-    </div>
+      </div>
+    </form>
   );
 };
 
