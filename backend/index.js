@@ -505,6 +505,20 @@ app.put("/api/users/:userId", async (req, res) => {
   }
 });
 
+app.get("/api/users/supervisors", async (req, res) => {
+  try {
+    // Fetch users with role as either 'supervisor' or 'admin'
+    const supervisors = await User.find(
+      { role: { $in: ["supervisor", "admin"] } }, // Correctly filtering by role
+      { firstName: 1, lastName: 1, _id: 1 } // Returning only necessary fields
+    );
+    res.json(supervisors);
+  } catch (error) {
+    console.error("Error fetching supervisors:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 app.get("/api/users/:userId", async (req, res) => {
   try {
     const user = await User.findById(req.params.userId, {
@@ -531,6 +545,11 @@ app.get("/api/users/:userId", async (req, res) => {
     });
   }
 });
+
+
+
+
+
 
 // Start the server
 const PORT = process.env.PORT || 8080;
