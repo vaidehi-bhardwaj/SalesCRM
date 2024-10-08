@@ -7,31 +7,45 @@ import "./Header.css";
 import logo from "./logo.png";
 import home from "./home.png";
 
-const headerButtons = [
-  { name: "Lead", items: ["Create Leads"] },
-  {
-    name: "Lead Details",
-    items: [
-      "Leads",
-      "Report",
-      "Find Lead Owner",
-      "Search Latest Leads",
-      "Multiple Assign",
-    ],
-  },
-  { name: "BI", items: ["BI"] },
-  { name: "Change Password", items: ["Change Password"] },
-];
+const headerButtonsByRole = {
+  supervisor: [
+    { name: "Lead", items: ["Create Leads"] },
+    {
+      name: "Lead Details",
+      items: ["Leads List", "BI", "Multiple Assign"],
+    },
+    { name: "Team", items: ["Overview"] },
+    { name: "To-do", items: ["To-do List"] },
+    { name: "Change Password", items: ["Change Password"] },
+  ],
+  admin: [
+    {
+      name: "Leads",
+      items: ["Leads List"],
+    },
+    { name: "To-do", items: ["To-do List"] },
+    { name: "Team", items: ["Overview"] },
+    { name: "Users", items: ["User Management"] },
+    { name: "Change Password", items: ["Change Password"] },
+  ],
+  subuser: [
+    { name: "Lead", items: ["Create Leads", "Leads List"] },
+    { name: "To-do", items: ["To-do List"] },
+    { name: "Change Password", items: ["Change Password"] },
+  ],
+};
 
 function Header() {
   const [loggedInUser, setLoggedInUser] = useState("");
   const [userId, setUserId] = useState("");
   const [openDropdown, setOpenDropdown] = useState(null);
+  const [userRole, setUserRole] = useState("");
   const navigate = useNavigate();
 
   useEffect(() => {
     setLoggedInUser(localStorage.getItem("loggedInUser"));
     setUserId(localStorage.getItem("userId"));
+    setUserRole(localStorage.getItem("userRole")); 
   }, []);
 
  const handleLogout = (e) => {
@@ -64,11 +78,23 @@ function Header() {
     setOpenDropdown(openDropdown === index ? null : index);
   };
 
+   const headerButtons = headerButtonsByRole[userRole] || [];
+
   return (
     <div className="main-container">
       <img src={logo} alt="Top " className="top-image" />
 
-      <div className="main-header">
+      <div
+        className={`main-header ${
+          userRole === "subuser"
+            ? "subuser-header"
+            : userRole === "admin"
+            ? "admin-header"
+            : userRole==="supervisor"
+            ?"supervisor-header"
+            :""
+        }`}
+      >
         <div className="header-buttons">
           {headerButtons.map((button, index) => (
             <Dropdown

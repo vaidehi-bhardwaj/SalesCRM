@@ -1,38 +1,24 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 
+// Define the mapping of dropdown items to paths
+const pathsByItem = {
+  "Create Leads": "/leads",
+  "Leads List": "/display",
+  BI: "/bi",
+  "Multiple Assign": "/assign",
+  Overview: "/overview",
+  "To-do List": "/todo",
+  "User Management": "/user-management",
+  "Change Password": "/reset-password",
+};
+
 function Dropdown({ name, items, isOpen, toggleDropdown }) {
   const navigate = useNavigate();
 
   const handleClick = (item) => {
-    let path = "";
-    switch (item) {
-      case "Create Leads":
-        path = "/leads";
-        break;
-      case "Leads":
-        path = "/display";
-        break;
-      case "Item 3":
-        path = "/lead";
-        break;
-      case "Item A":
-      case "Item B":
-      case "Item C":
-        path = "/lead-details";
-        break;
-      case "Option X":
-      case "Option Y":
-      case "Option Z":
-        path = "/bi";
-        break;
-      case "Change Password":
-        path = "/reset-password";
-        break;
-      default:
-        break;
-    }
-    navigate(path);
+    const path = pathsByItem[item] || "/";
+    navigate(path); // Navigate to the corresponding path
     toggleDropdown(null); // Close dropdown after navigation
   };
 

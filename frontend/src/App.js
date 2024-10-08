@@ -134,7 +134,7 @@ function App() {
           
           <Route path="/add-user" element={<PrivateRoute element={<AddUser />} allowedRoles={["admin"]} />}/>
           <Route
-            path="/user-table"
+            path="/user-management"
             element={ <PrivateRoute element ={<ErrorBoundary>
                 <UserTable />
               </ErrorBoundary> }
