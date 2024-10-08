@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
+import "./UserTable.css"; // Assuming the same CSS file is being applied
 
 const AddUser = ({ onClose }) => {
   const [userData, setUserData] = useState({
@@ -52,8 +53,8 @@ const AddUser = ({ onClose }) => {
   };
 
   return (
-    <form onSubmit={handleFormSubmit}>
-      <div>
+    <form className="user-form" onSubmit={handleFormSubmit}>
+      <div className="user-form-group">
         <label htmlFor="firstName">First Name</label>
         <input
           id="firstName"
@@ -62,9 +63,6 @@ const AddUser = ({ onClose }) => {
           onChange={handleInputChange}
           required
         />
-      </div>
-
-      <div>
         <label htmlFor="lastName">Last Name</label>
         <input
           id="lastName"
@@ -75,7 +73,7 @@ const AddUser = ({ onClose }) => {
         />
       </div>
 
-      <div>
+      <div className="user-form-group">
         <label htmlFor="designation">Designation</label>
         <input
           id="designation"
@@ -84,9 +82,6 @@ const AddUser = ({ onClose }) => {
           onChange={handleInputChange}
           required
         />
-      </div>
-
-      <div>
         <label htmlFor="email">Email</label>
         <input
           id="email"
@@ -97,7 +92,7 @@ const AddUser = ({ onClose }) => {
         />
       </div>
 
-      <div>
+      <div className="user-form-group">
         <label htmlFor="mobile">Mobile</label>
         <input
           id="mobile"
@@ -106,9 +101,6 @@ const AddUser = ({ onClose }) => {
           onChange={handleInputChange}
           required
         />
-      </div>
-
-      <div>
         <label htmlFor="password">Password</label>
         <input
           id="password"
@@ -120,7 +112,7 @@ const AddUser = ({ onClose }) => {
         />
       </div>
 
-      <div>
+      <div className="user-form-group">
         <label htmlFor="role">Role</label>
         <select
           id="role"
@@ -132,9 +124,6 @@ const AddUser = ({ onClose }) => {
           <option value="supervisor">Supervisor</option>
           <option value="admin">Admin</option>
         </select>
-      </div>
-
-      <div>
         <label htmlFor="supervisor">Supervisor</label>
         <select
           id="supervisor"
@@ -142,7 +131,7 @@ const AddUser = ({ onClose }) => {
           value={userData.supervisor}
           onChange={handleInputChange}
         >
-          <option value="">Select Supervisor</option>
+          <option value="">No Supervisor</option> {/* Null option */}
           {supervisors.map((supervisor) => (
             <option key={supervisor._id} value={supervisor._id}>
               {supervisor.firstName} {supervisor.lastName}
@@ -151,7 +140,7 @@ const AddUser = ({ onClose }) => {
         </select>
       </div>
 
-      <div>
+      <div className="user-form-group">
         <label htmlFor="status">Status</label>
         <select
           id="status"
@@ -164,7 +153,14 @@ const AddUser = ({ onClose }) => {
         </select>
       </div>
 
-      <button type="submit">Save User</button>
+      <div className="user-form-group full-width">
+        <button className="add-usr-btn" type="submit">
+          Save User
+        </button>
+        <button className="close-btn" type="button" onClick={onClose}>
+          Cancel
+        </button>
+      </div>
     </form>
   );
 };

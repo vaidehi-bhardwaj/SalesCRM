@@ -19,20 +19,48 @@ const UserTable = () => {
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState(null);
+  const [filters, setFilters] = useState({
+    name: "",
+    supervisor: "",
+    role: "",
+    designation: "",
+    status: "",
+  });
+  const [supervisors, setSupervisors] = useState([]); // To store supervisors for the dropdown
 
   useEffect(() => {
-    const fetchUsers = async () => {
-      try {
-        const response = await axios.get("http://localhost:8080/api/users");
-        setUsers(response.data);
-      } catch (error) {
-        console.error("Error fetching users:", error);
-      }
-    };
-
     fetchUsers();
-  }, []);
+    fetchSupervisors();
+  }, [filters]);
 
+  const fetchUsers = async () => {
+    try {
+      const response = await axios.get("http://localhost:8080/api/users", {
+        params: filters, // Send filters to the backend
+      });
+      setUsers(response.data);
+    } catch (error) {
+      console.error("Error fetching users:", error);
+    }
+  };
+
+  const fetchSupervisors = async () => {
+    try {
+      const response = await axios.get(
+        "http://localhost:8080/api/users/supervisors"
+      );
+      setSupervisors(response.data); // Populate supervisors for the dropdown
+    } catch (error) {
+      console.error("Error fetching supervisors:", error);
+    }
+  };
+
+  const handleFilterChange = (e) => {
+    setFilters({
+      ...filters,
+      [e.target.name]: e.target.value,
+    });
+  };
   const handleEditUser = (userId) => {
     setSelectedUserId(userId);
     setShowEditModal(true);
@@ -47,6 +75,7 @@ const UserTable = () => {
     setShowAddModal(false);
   };
 
+
   const refreshUsers = async () => {
     try {
       const response = await axios.get("http://localhost:8080/api/users");
@@ -58,9 +87,59 @@ const UserTable = () => {
 
   return (
     <div className="user-management-container">
-      <button className="create-user-btn" onClick={() => setShowAddModal(true)}>
-        Create New User
-      </button>
+      <div className="filters">
+        <input
+          type="text"
+          name="name"
+          placeholder="Search by name"
+          value={filters.name}
+          onChange={handleFilterChange}
+        />
+
+        <select
+          name="supervisor"
+          value={filters.supervisor}
+          onChange={handleFilterChange}
+        >
+          <option value="">All Supervisors</option>
+          {supervisors.map((supervisor) => (
+            <option key={supervisor._id} value={supervisor._id}>
+              {supervisor.firstName} {supervisor.lastName}
+            </option>
+          ))}
+        </select>
+
+        <select name="role" value={filters.role} onChange={handleFilterChange}>
+          <option value="">All Roles</option>
+          <option value="admin">Admin</option>
+          <option value="supervisor">Supervisor</option>
+          <option value="subuser">Subuser</option>
+        </select>
+
+        <input
+          type="text"
+          name="designation"
+          placeholder="Search by designation"
+          value={filters.designation}
+          onChange={handleFilterChange}
+        />
+
+        <select
+          name="status"
+          value={filters.status}
+          onChange={handleFilterChange}
+        >
+          <option value="">All Statuses</option>
+          <option value="active">Active</option>
+          <option value="inactive">Inactive</option>
+        </select>
+        <button
+          className="create-user-btn"
+          onClick={() => setShowAddModal(true)}
+        >
+          Create New User
+        </button>
+      </div>
 
       {showAddModal && (
         <UserModalOverlay onClose={closeAddModal}>

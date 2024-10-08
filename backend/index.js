@@ -476,10 +476,49 @@ app.post("/api/users", async (req, res) => {
 
 app.get("/api/users", async (req, res) => {
   try {
-    const users = await User.find(
-      {},
-      { firstName: 1, lastName: 1, email: 1, role: 1, status: 1 }
-    );
+    const { name, supervisor, role, designation, status } = req.query;
+
+    // Log the incoming query parameters for debugging
+    console.log("Received filters:", {
+      name,
+      supervisor,
+      role,
+      designation,
+      status,
+    });
+
+    // Build the query object based on filters
+    const query = {};
+
+    if (name) {
+      query.$or = [
+        { firstName: { $regex: name, $options: "i" } },
+        { lastName: { $regex: name, $options: "i" } },
+      ];
+    }
+    if (supervisor) {
+      query.supervisor = supervisor;
+    }
+    if (role) {
+      query.role = role;
+    }
+    if (designation) {
+      query.designation = { $regex: designation, $options: "i" };
+    }
+    if (status) {
+      query.status = status;
+    }
+
+    console.log("MongoDB query:", query);
+
+    const users = await User.find(query, {
+      firstName: 1,
+      lastName: 1,
+      email: 1,
+      role: 1,
+      status: 1,
+    }).populate("supervisor", "firstName lastName");
+
     res.json(users);
   } catch (error) {
     console.error("Error fetching users:", error);
@@ -490,6 +529,8 @@ app.get("/api/users", async (req, res) => {
     });
   }
 });
+
+
 
 app.put("/api/users/:userId", async (req, res) => {
   try {

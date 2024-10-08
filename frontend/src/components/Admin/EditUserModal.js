@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
+import "./UserTable.css"; // Assuming same CSS file for styling
 
 const EditUserModal = ({ userId, onClose }) => {
   const [userData, setUserData] = useState({
@@ -9,16 +10,24 @@ const EditUserModal = ({ userId, onClose }) => {
     email: "",
     mobile: "",
     role: "",
+    supervisor: "", // Add supervisor field to the state
     status: "",
   });
 
+  const [supervisors, setSupervisors] = useState([]); // Fetch supervisors
+
+  // Fetch user details for editing
   useEffect(() => {
     const fetchUserDetails = async () => {
       try {
         const response = await axios.get(
           `http://localhost:8080/api/users/${userId}`
         );
-        setUserData(response.data);
+        // Ensure the supervisor is displayed correctly
+        setUserData({
+          ...response.data,
+          supervisor: response.data.supervisor || "", // Set to empty string if null
+        });
       } catch (error) {
         console.error("Error fetching user details:", error);
       }
@@ -29,6 +38,21 @@ const EditUserModal = ({ userId, onClose }) => {
     }
   }, [userId]);
 
+  // Fetch supervisors (users with roles 'supervisor' or 'admin')
+  useEffect(() => {
+    const fetchSupervisors = async () => {
+      try {
+        const response = await axios.get(
+          "http://localhost:8080/api/users/supervisors"
+        );
+        setSupervisors(response.data);
+      } catch (error) {
+        console.error("Error fetching supervisors:", error);
+      }
+    };
+    fetchSupervisors();
+  }, []);
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setUserData((prev) => ({
@@ -37,17 +61,26 @@ const EditUserModal = ({ userId, onClose }) => {
     }));
   };
 
-  const handleFormSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      await axios.put(`http://localhost:8080/api/users/${userId}`, userData);
-      alert("User updated successfully!");
-      onClose();
-    } catch (error) {
-      console.error("Error updating user:", error);
-      alert("Error updating user");
-    }
-  };
+   const handleFormSubmit = async (e) => {
+     e.preventDefault();
+
+     const updatedUserData = {
+       ...userData,
+       supervisor: userData.supervisor === "" ? null : userData.supervisor, // Set supervisor to null if "No Supervisor" is selected
+     };
+
+     try {
+       await axios.put(
+         `http://localhost:8080/api/users/${userId}`,
+         updatedUserData
+       );
+       alert("User updated successfully!");
+       onClose();
+     } catch (error) {
+       console.error("Error updating user:", error);
+       alert("Error updating user");
+     }
+   };
 
   return (
     <form className="user-form" onSubmit={handleFormSubmit}>
@@ -71,6 +104,7 @@ const EditUserModal = ({ userId, onClose }) => {
           required
         />
       </div>
+
       <div className="user-form-group">
         <label htmlFor="designation">Designation</label>
         <input
@@ -91,6 +125,7 @@ const EditUserModal = ({ userId, onClose }) => {
           required
         />
       </div>
+
       <div className="user-form-group">
         <label htmlFor="mobile">Mobile</label>
         <input
@@ -113,7 +148,23 @@ const EditUserModal = ({ userId, onClose }) => {
           <option value="admin">Admin</option>
         </select>
       </div>
+
+      {/* Add Supervisor Field */}
       <div className="user-form-group">
+        <label htmlFor="supervisor">Supervisor</label>
+        <select
+          id="supervisor"
+          name="supervisor"
+          value={userData.supervisor}
+          onChange={handleInputChange}
+        >
+          <option value="">No Supervisor</option> {/* Null option */}
+          {supervisors.map((supervisor) => (
+            <option key={supervisor._id} value={supervisor._id}>
+              {supervisor.firstName} {supervisor.lastName}
+            </option>
+          ))}
+        </select>
         <label htmlFor="status">Status</label>
         <select
           id="status"
@@ -125,6 +176,7 @@ const EditUserModal = ({ userId, onClose }) => {
           <option value="inactive">Inactive</option>
         </select>
       </div>
+
       <div className="user-form-group full-width">
         <button className="edit-btn" type="submit">
           Save Changes

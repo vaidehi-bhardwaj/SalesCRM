@@ -75,7 +75,7 @@ function App() {
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/reset-password/:token" element={<ResetPassword />} />
           <Route path="/reset-password" element={<ResetPassword />} />
-
+</Route>
           <Route element={<LayoutWithHeader />}>
             <Route
               path="/home"
@@ -131,7 +131,7 @@ function App() {
                 />
               }
             />
-          </Route>
+          
           <Route path="/add-user" element={<PrivateRoute element={<AddUser />} allowedRoles={["admin"]} />}/>
           <Route
             path="/user-table"
