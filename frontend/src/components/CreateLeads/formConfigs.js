@@ -1,16 +1,14 @@
-//editting new thing
-
 export const companyFormConfig = [
   [
     {
-      name: "Lead Type",
+      name: "leadType", // Changed from "Lead Type" to "leadType"
       label: "Lead Type",
       type: "select",
       options: "leadTypeOptions",
     },
-    { name: "Generic email 1", label: "Generic email 1", type: "email" },
+    { name: "genericEmail1", label: "Generic email 1", type: "email" }, // Changed from "Generic email 1" to "genericEmail1"
     {
-      name: "Vertical",
+      name: "vertical", // Changed from "Vertical" to "vertical"
       label: "Vertical",
       type: "select",
       options: "verticalOptions",
@@ -18,43 +16,43 @@ export const companyFormConfig = [
   ],
   [
     {
-      name: "Company Name",
+      name: "companyName", // Changed from "Company Name" to "companyName"
       label: "Company Name",
       type: "text",
     },
-    { name: "Generic email 2", label: "Generic email 2", type: "email" },
+    { name: "genericEmail2", label: "Generic email 2", type: "email" }, // Changed from "Generic email 2" to "genericEmail2"
     {
-      name: "Lead Assigned to",
+      name: "leadAssignedTo", // Changed from "Lead Assigned to" to "leadAssignedTo"
       label: "Lead Assigned to",
       type: "select",
       options: "leadAssignedToOptions",
     },
   ],
   [
-    { name: "Website", label: "Website", type: "url" },
-    { name: "Generic phone 1", label: "Generic phone 1", type: "tel" },
-    { name: "BDM", label: "BDM", type: "select", options: "bdmOptions" },
+    { name: "website", label: "Website", type: "url" }, // Changed from "Website" to "website"
+    { name: "genericPhone1", label: "Generic phone 1", type: "tel" }, // Changed from "Generic phone 1" to "genericPhone1"
+    { name: "bdm", label: "BDM", type: "select", options: "bdmOptions" }, // Changed from "BDM" to "bdm"
   ],
   [
-    { name: "Address", label: "Address", type: "text" },
-    { name: "Generic phone 2", label: "Generic phone 2", type: "tel" },
+    { name: "address", label: "Address", type: "text" }, // Changed from "Address" to "address"
+    { name: "genericPhone2", label: "Generic phone 2", type: "tel" }, // Changed from "Generic phone 2" to "genericPhone2"
     {
-      name: "Lead Status",
+      name: "leadStatus", // Changed from "Lead Status" to "leadStatus"
       label: "Lead Status",
       type: "select",
       options: "leadStatusOptions",
     },
   ],
   [
-    { name: "City", label: "City", type: "text" },
+    { name: "city", label: "City", type: "text" }, // Changed from "City" to "city"
     {
-      name: "Lead Source",
+      name: "leadSource", // Changed from "Lead Source" to "leadSource"
       label: "Lead Source",
       type: "select",
       options: "leadSourceOptions",
     },
     {
-      name: "Priority",
+      name: "priority", // Changed from "Priority" to "priority"
       label: "Priority",
       type: "select",
       options: "priorityOptions",
@@ -62,18 +60,18 @@ export const companyFormConfig = [
   ],
   [
     {
-      name: "State",
+      name: "state", // Changed from "State" to "state"
       label: "State",
       type: "select",
       options: "stateOptions",
     },
     {
-      name: "totalNoOfOffices",
+      name: "totalNoOfOffices", // Remains unchanged
       label: "Total no. of offices",
       type: "number",
     },
     {
-      name: "Next Action",
+      name: "nextAction", // Changed from "Next Action" to "nextAction"
       label: "Next Action",
       type: "select",
       options: "nextActionOptions",
@@ -83,19 +81,19 @@ export const companyFormConfig = [
   ],
   [
     {
-      name: "Country",
+      name: "country", // Changed from "Country" to "country"
       label: "Country",
       type: "select",
       options: "countryOptions",
     },
     {
-      name: "Turn Over (INR)",
+      name: "turnOverINR", // Changed from "Turn Over (INR)" to "turnOverINR"
       label: "Turn Over (INR)",
       type: "select",
       options: "turnOverOptions",
     },
     {
-      name: "Lead Usable",
+      name: "leadUsable", // Changed from "Lead Usable" to "leadUsable"
       label: "Lead Usable",
       type: "select",
       options: "leadUsableOptions",
@@ -103,25 +101,26 @@ export const companyFormConfig = [
   ],
   [
     {
-      name: "Employee Count",
+      name: "employeeCount", // Changed from "Employee Count" to "employeeCount"
       label: "Employee Count",
       type: "select",
       options: "employeeCountOptions",
     },
     {
-      name: "totalNoOfManufUnits",
+      name: "totalNoOfManufUnits", // Remains unchanged
       label: "Total no. of Manuf. Units",
       type: "number",
     },
     {
-      name: "Reason",
+      name: "reason", // Changed from "Reason" to "reason"
       label: "Reason",
       type: "select",
       options: "reasonOptions",
     },
   ],
-  [{ name: "About The Company", label: "About The Company", type: "textarea" }],
+  [{ name: "aboutTheCompany", label: "About The Company", type: "textarea" }], // Changed from "About The Company" to "aboutTheCompany"
 ];
+
 export const contactFormConfig = [
   {
     role: "IT",
@@ -130,18 +129,18 @@ export const contactFormConfig = [
       { name: "itDlExt", label: "DL/Ext", type: "text" },
       { name: "itDesignation", label: "Designation", type: "text" },
       { name: "itMobile", label: "Mobile", type: "tel" },
-      { name: "itEmail", label: "Email", type: "email"},
+      { name: "itEmail", label: "Email", type: "email" },
       { name: "itPersonalEmail", label: "Personal Email", type: "email" },
     ],
   },
   {
     role: "Finance",
     fields: [
-      { name: "financeName", label: "Name", type: "text"},
+      { name: "financeName", label: "Name", type: "text" },
       { name: "financeDlExt", label: "DL/Ext", type: "text" },
       { name: "financeDesignation", label: "Designation", type: "text" },
       { name: "financeMobile", label: "Mobile", type: "tel" },
-      { name: "financeEmail", label: "Email", type: "email"},
+      { name: "financeEmail", label: "Email", type: "email" },
       { name: "financePersonalEmail", label: "Personal Email", type: "email" },
     ],
   },
@@ -156,7 +155,6 @@ export const contactFormConfig = [
         name: "businessHeadEmail",
         label: "Email",
         type: "email",
-        
       },
       {
         name: "businessHeadPersonalEmail",
@@ -171,14 +169,14 @@ export const itLandscapeConfig = {
   netNew: [
     [
       {
-        name: "Using ERP (y/n)",
+        name: "usingERP", // Changed from "Using ERP (y/n)" to "usingERP"
         label: "Using ERP (y/n)",
         type: "select",
         options: "usingERPOptions",
       },
-      { name: "Budget", label: "Budget", type: "text" },
+      { name: "budget", label: "Budget", type: "text" }, // Changed from "Budget" to "budget"
       {
-        name: "Opportunity for us 1",
+        name: "opportunityForUs1", // Changed from "Opportunity for us 1" to "opportunityForUs1"
         label: "Opportunity for us 1",
         type: "select",
         options: "opportunityOptions",
@@ -186,39 +184,37 @@ export const itLandscapeConfig = {
     ],
     [
       {
-        name: "If yes, which one",
+        name: "ifYesWhichOne", // Changed from "If yes, which one" to "ifYesWhichOne"
         label: "If yes, which one",
         type: "select",
         options: "ERPTypeOptions",
       },
-      { name: "Authority", label: "Authority", type: "text" },
+      { name: "authority", label: "Authority", type: "text" }, // Changed from "Authority" to "authority"
       {
-        name: "Opportunity Value 1",
+        name: "opportunityValue1", // Changed from "Opportunity Value 1" to "opportunityValue1"
         label: "Opportunity Value 1",
         type: "select",
       },
     ],
     [
       {
-        name: "If no, why",
+        name: "ifNoWhy", // Changed from "If no, why" to "ifNoWhy"
         label: "If no, why",
         type: "select",
         options: "noWhyOptions",
       },
-      { name: "Need", label: "Need", type: "text" },
-
+      { name: "need", label: "Need", type: "text" }, // Changed from "Need" to "need"
       {
-        name: "Timeframe",
+        name: "timeframe", // Changed from "Timeframe" to "timeframe"
         label: "Timeframe",
         type: "select",
         options: "timeframeOptions",
       },
     ],
     [
-      { name: "Hardware", label: "Hardware", type: "text" },
-
+      { name: "hardware", label: "Hardware", type: "text" }, // Changed from "Hardware" to "hardware"
       {
-        name: "Current Database",
+        name: "currentDatabase", // Changed from "Current Database" to "currentDatabase"
         label: "Current Database",
         type: "select",
         options: "currentDatabaseOptions",
@@ -228,33 +224,32 @@ export const itLandscapeConfig = {
   SAPInstalledBase: [
     [
       {
-        name: "Opportunity for us 2",
+        name: "opportunityForUs2", // Changed from "Opportunity for us 2" to "opportunityForUs2"
         label: "Opportunity for us 2",
         type: "select",
         options: "opportunityOptions",
       },
       {
-        name: "Year of Implementation",
+        name: "yearOfImplementation", // Changed from "Year of Implementation" to "yearOfImplementation"
         label: "Year of Implementation",
         type: "text",
       },
-      { name: "No. of Users", label: "No. of Users", type: "number" },
+      { name: "noOfUsers", label: "No. of Users", type: "number" }, // Changed from "No. of Users" to "noOfUsers"
     ],
     [
       {
-        name: "Opportunity Value 2",
+        name: "opportunityValue2", // Changed from "Opportunity Value 2" to "opportunityValue2"
         label: "Opportunity Value 2",
         type: "text",
       },
-
       {
-        name: "Contract Expiry",
+        name: "contractExpiry", // Changed from "Contract Expiry" to "contractExpiry"
         label: "Contract Expiry",
         type: "select",
         options: "expiryOptions",
       },
       {
-        name: "Support Partner",
+        name: "supportPartner", // Changed from "Support Partner" to "supportPartner"
         label: "Support Partner",
         type: "select",
         options: "partnerOptions",
@@ -262,43 +257,41 @@ export const itLandscapeConfig = {
     ],
     [
       {
-        name: "Opportunity for us 3",
+        name: "opportunityForUs3", // Changed from "Opportunity for us 3" to "opportunityForUs3"
         label: "Opportunity for us 3",
         type: "select",
         options: "opportunityOptions",
       },
-
       {
-        name: "Exact Version",
+        name: "exactVersion", // Changed from "Exact Version" to "exactVersion"
         label: "Exact Version",
         type: "select",
         options: "versionOptions",
       },
-      { name: "Hardware", label: "Hardware", type: "text" },
+      { name: "hardware", label: "Hardware", type: "text" }, // Remains unchanged
     ],
     [
       {
-        name: "Opportunity Value 3",
+        name: "opportunityValue3", // Changed from "Opportunity Value 3" to "opportunityValue3"
         label: "Opportunity Value 3",
         type: "text",
       },
-      { name: "No. of License", label: "No. of License", type: "number" },
-      { name: "License Value", label: "License Value", type: "text" },
+      { name: "noOfLicense", label: "No. of License", type: "number" }, // Changed from "No. of License" to "noOfLicense"
+      { name: "licenseValue", label: "License Value", type: "text" }, // Changed from "License Value" to "licenseValue"
     ],
     [
       {
-        name: "Modules Implemented",
+        name: "modulesImplemented", // Changed from "Modules Implemented" to "modulesImplemented"
         label: "Modules Implemented",
         type: "text",
       },
-
       {
-        name: "Implementation Partner",
+        name: "implementationPartner", // Changed from "Implementation Partner" to "implementationPartner"
         label: "Implementation Partner",
         type: "text",
       },
       {
-        name: "Total Project Cost",
+        name: "totalProjectCost", // Changed from "Total Project Cost" to "totalProjectCost"
         label: "Total Project Cost",
         type: "text",
       },

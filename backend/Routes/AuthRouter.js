@@ -28,6 +28,11 @@ router.post("/login", loginValidation, async (req, res) => {
         .json({ success: false, message: "Invalid email or password" });
     }
 
+    if (user.status === "inactive") {
+      return res
+        .status(403)
+        .json({ success: false, message: "Your account is inactive. Please contact admin." });
+    }
     // Check password
     const isMatch = await bcrypt.compare(password, user.password);
 

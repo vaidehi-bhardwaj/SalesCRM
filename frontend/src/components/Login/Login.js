@@ -22,60 +22,57 @@ function Login({ setIsAuthenticated, setUserRole }) {
     }));
   };
 
-  const handleLogin = async (e) => {
-    e.preventDefault();
-    const { email, password } = loginInfo;
-    if (!email || !password) {
-      return handleError("Email and password are required");
-    }
-    try {
-      const url = `http://localhost:8080/auth/login`;
-      const response = await fetch(url, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(loginInfo),
-      });
-      const result = await response.json();
+ const handleLogin = async (e) => {
+   e.preventDefault();
+   const { email, password } = loginInfo;
+   if (!email || !password) {
+     return handleError("Email and password are required");
+   }
+   try {
+     const url = `http://localhost:8080/auth/login`;
+     const response = await fetch(url, {
+       method: "POST",
+       headers: {
+         "Content-Type": "application/json",
+       },
+       body: JSON.stringify(loginInfo),
+     });
+     const result = await response.json();
 
-      const { success, message, jwtToken, firstName, userId, role, error } = result;
-      if (success) {
-        handleSuccess(message);
-        localStorage.setItem("token", jwtToken);
-        localStorage.setItem("loggedInUser", firstName);
-        localStorage.setItem("userId", userId);
-        localStorage.setItem("userRole", role);
+     const { success, message, jwtToken, firstName, userId, role } = result;
+     if (success) {
+       handleSuccess(message);
+       localStorage.setItem("token", jwtToken);
+       localStorage.setItem("loggedInUser", firstName);
+       localStorage.setItem("userId", userId);
+       localStorage.setItem("userRole", role);
 
-        setIsAuthenticated(true);
-        setUserRole(role);
+       setIsAuthenticated(true);
+       setUserRole(role);
 
-        setTimeout(() => {
-          // Redirect based on user role
-          switch (role.toLowerCase()) {
-            case "admin":
-              navigate("/admin/dashboard");
-              break;
-            case "supervisor":
-              navigate("/supervisor/dashboard");
-              break;
-            case "subuser":
-            default:
-              navigate("/home");
-              break;
-          }
-        }, 1000);
-      } else if (error) {
-        const details = error?.details[0].message;
-        handleError(details);
-      } else {
-        handleError(message);
-      }
-    } catch (err) {
-      console.error("Login error:", err);
-      handleError(err.message);
-    }
-  };
+       // Redirect based on user role
+       setTimeout(() => {
+         switch (role.toLowerCase()) {
+           case "admin":
+             navigate("/admin/dashboard");
+             break;
+           case "supervisor":
+             navigate("/supervisor/dashboard");
+             break;
+           case "subuser":
+           default:
+             navigate("/home");
+             break;
+         }
+       }, 1000);
+     } else {
+       handleError(message);
+     }
+   } catch (err) {
+     handleError(err.message);
+   }
+ };
+
 
   return (
     <div className="login-page">

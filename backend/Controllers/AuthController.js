@@ -14,6 +14,14 @@ const login = async (req, res) => {
          .status(400)
          .json({ message: "Email and password are required.", success: false });
      }
+     if (!user || user.status === "inactive") {
+       return res.status(403).json({
+         success: false,
+         message: user
+           ? "Your account is inactive."
+           : "Invalid email or password",
+       });
+     }
     if (!user) {
       return res
         .status(403)

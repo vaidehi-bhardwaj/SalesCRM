@@ -16,6 +16,9 @@ import SupervisorDashboard from "./components/Dashboards/SupervisorDashboard";
 import AddUser from "./components/Admin/AddUser";
 import UserTable from "./components/Admin/UserTable";
 import ErrorBoundary from "./components/Admin/ErrorBoundary";
+import TeamOverview from "./components/Team/TeamOverview";
+import UserLeads from "./components/Team/UserLeads";
+import MultipleAssign from "./components/Supervisor/MultipleAssign";
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -75,70 +78,107 @@ function App() {
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/reset-password/:token" element={<ResetPassword />} />
           <Route path="/reset-password" element={<ResetPassword />} />
-</Route>
-          <Route element={<LayoutWithHeader />}>
-            <Route
-              path="/home"
-              element={
-                <PrivateRoute
-                  element={<Home />}
-                  allowedRoles={["subuser", "supervisor", "admin"]}
-                />
-              }
-            />
-            <Route
-              path="/leads"
-              element={
-                <PrivateRoute
-                  element={<CreateLeads />}
-                  allowedRoles={["subuser", "supervisor", "admin"]}
-                />
-              }
-            />
-            <Route
-              path="/display"
-              element={
-                <PrivateRoute
-                  element={<Display />}
-                  allowedRoles={["subuser", "supervisor", "admin"]}
-                />
-              }
-            />
-            <Route
-              path="/details"
-              element={
-                <PrivateRoute
-                  element={<LeadDetails />}
-                  allowedRoles={["subuser", "supervisor", "admin"]}
-                />
-              }
-            />
-            <Route
-              path="/admin/dashboard"
-              element={
-                <PrivateRoute
-                  element={<AdminDashboard />}
-                  allowedRoles={["admin"]}
-                />
-              }
-            />
-            <Route
-              path="/supervisor/dashboard"
-              element={
-                <PrivateRoute
-                  element={<SupervisorDashboard />}
-                  allowedRoles={["supervisor", "admin"]}
-                />
-              }
-            />
-          
-          <Route path="/add-user" element={<PrivateRoute element={<AddUser />} allowedRoles={["admin"]} />}/>
+        </Route>
+        <Route element={<LayoutWithHeader />}>
+          <Route
+            path="/home"
+            element={
+              <PrivateRoute
+                element={<Home />}
+                allowedRoles={["subuser", "supervisor", "admin"]}
+              />
+            }
+          />
+          <Route
+            path="/leads"
+            element={
+              <PrivateRoute
+                element={<CreateLeads />}
+                allowedRoles={["subuser", "supervisor", "admin"]}
+              />
+            }
+          />
+          <Route
+            path="/display"
+            element={
+              <PrivateRoute
+                element={<Display />}
+                allowedRoles={["subuser", "supervisor", "admin"]}
+              />
+            }
+          />
+          <Route
+            path="/details"
+            element={
+              <PrivateRoute
+                element={<LeadDetails />}
+                allowedRoles={["subuser", "supervisor", "admin"]}
+              />
+            }
+          />
+          <Route
+            path="/admin/dashboard"
+            element={
+              <PrivateRoute
+                element={<AdminDashboard />}
+                allowedRoles={["admin"]}
+              />
+            }
+          />
+          <Route
+            path="/supervisor/dashboard"
+            element={
+              <PrivateRoute
+                element={<SupervisorDashboard />}
+                allowedRoles={["supervisor", "admin"]}
+              />
+            }
+          />
+
+          <Route
+            path="/add-user"
+            element={
+              <PrivateRoute element={<AddUser />} allowedRoles={["admin"]} />
+            }
+          />
           <Route
             path="/user-management"
-            element={ <PrivateRoute element ={<ErrorBoundary>
-                <UserTable />
-              </ErrorBoundary> }
-              allowedRoles={["admin"]} />
+            element={
+              <PrivateRoute
+                element={
+                  <ErrorBoundary>
+                    <UserTable />
+                  </ErrorBoundary>
+                }
+                allowedRoles={["admin"]}
+              />
+            }
+          />
+          <Route
+            path="/team-overview"
+            element={
+              <PrivateRoute
+                element={<TeamOverview />}
+                allowedRoles={["admin", "supervisor"]}
+              />
+            }
+          />
+          <Route
+            path="/leads/:userId"
+            element={
+              <PrivateRoute
+                element={<UserLeads />}
+                allowedRoles={["admin", "supervisor"]}
+              />
+            }
+          />
+          <Route
+            path="/multiple-assign"
+            element={
+              <PrivateRoute
+                element={<MultipleAssign />}
+                allowedRoles={["admin", "supervisor"]}
+              />
             }
           />
         </Route>

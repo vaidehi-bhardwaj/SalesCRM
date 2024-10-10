@@ -108,18 +108,16 @@ const CreateLeads = () => {
   }, []);
 
   const handleChange = useCallback((e, section, index) => {
-   
-     const { name, value } = e.target;
-     const parsedValue = ["totalNoOfOffices", "totalNoOfManufUnits"].includes(
-       name
-     )
-       ? Number(value)
-       : value;
-     setFormData((prevData) => ({
-       ...prevData,
-       [section]: { ...prevData[section], [name]: parsedValue },
-     }));
-
+    const { name, value } = e.target;
+    const parsedValue = ["totalNoOfOffices", "totalNoOfManufUnits"].includes(
+      name
+    )
+      ? Number(value)
+      : value;
+    setFormData((prevData) => ({
+      ...prevData,
+      [section]: { ...prevData[section], [name]: parsedValue },
+    }));
 
     setFormData((prevData) => {
       if (section === "additionalSections") {
@@ -229,7 +227,6 @@ const CreateLeads = () => {
           formDataToSend.append("file", file);
         }
 
-
         const response = await axios.post(
           "http://localhost:8080/api/leads",
           formDataToSend,
@@ -254,6 +251,8 @@ const CreateLeads = () => {
       <form onSubmit={handleSubmit}>
         <section className="form-section">
           <h1>Company Information</h1>
+
+          {/* Existing form fields */}
           {companyFormConfig.map((row, rowIndex) => (
             <FormRow key={rowIndex}>
               {row.map((field) => (
@@ -268,6 +267,29 @@ const CreateLeads = () => {
               ))}
             </FormRow>
           ))}
+
+          {/* Custom dropdown for "Lead Assigned To" */}
+          <FormRow>
+            <div className="form-group">
+              <label htmlFor="leadAssignedTo">Lead Assigned To:</label>
+              <select
+                name="leadAssignedTo" // Updated field name
+                value={formData.company.leadAssignedTo || ""} // Updated field name
+                onChange={(e) => handleChange(e, "company")}
+                className={errors.leadAssignedTo ? "mandatory" : ""} // Updated field name
+              >
+                <option value="">Select Lead Assigned To</option>
+                {options.leadAssignedToOptions?.map((user) => (
+                  <option key={user._id} value={user._id}>
+                    {user.firstName} {user.lastName}
+                  </option>
+                ))}
+              </select>
+              {errors.leadAssignedTo && ( // Updated field name
+                <span className="error">{errors.leadAssignedTo}</span>
+              )}
+            </div>
+          </FormRow>
         </section>
 
         <section className="form-section">

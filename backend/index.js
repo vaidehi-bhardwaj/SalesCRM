@@ -86,46 +86,59 @@ app.post("/api/leads", upload.single("file"), async (req, res) => {
 
     const leadData = {
       companyInfo: {
-        "Lead Type": parsedData.company["Lead Type"],
-        "Generic Email 1": parsedData.company["Generic email 1"],
-        Vertical: parsedData.company.Vertical,
-        "Company Name": parsedData.company["Company Name"],
-        "Generic Email 2": parsedData.company["Generic email 2"],
-        "Lead Assigned To": parsedData.company["Lead Assigned to"],
-        Website: parsedData.company.Website,
-        "Generic Phone 1": parsedData.company["Generic phone 1"],
-        BDM: parsedData.company.BDM,
-        Address: parsedData.company.Address,
-        "Generic Phone 2": parsedData.company["Generic phone 2"],
-        "Lead Status": parsedData.company["Lead Status"],
-        City: parsedData.company.City,
-        "Lead Source": parsedData.company["Lead Source"],
-        Priority: parsedData.company.Priority,
-        State: parsedData.company.State,
+        leadType: parsedData.company.leadType,
+        genericEmail1: parsedData.company.genericEmail1,
+        vertical: parsedData.company.vertical,
+        companyName: parsedData.company.companyName,
+        genericEmail2: parsedData.company.genericEmail2,
+        leadAssignedTo: new mongoose.Types.ObjectId(
+          parsedData.company.leadAssignedTo
+        ),
+        website: parsedData.company.website,
+        genericPhone1: parsedData.company.genericPhone1,
+        bdm: parsedData.company.bdm,
+        address: parsedData.company.address,
+        genericPhone2: parsedData.company.genericPhone2,
+        leadStatus: parsedData.company.leadStatus,
+        city: parsedData.company.city,
+        leadSource: parsedData.company.leadSource,
+        priority: parsedData.company.priority,
+        state: parsedData.company.state,
         totalNoOfOffices: Number(parsedData.company.totalNoOfOffices),
-        "Next Action": parsedData.company["Next Action"],
-        Country: parsedData.company.Country,
-        "Turn Over(INR)": parsedData.company["Turn Over(INR)"],
-        "Lead Usable": parsedData.company["Lead Usable"],
-        "Employee Count": parsedData.company["Employee Count"],
+        nextAction: parsedData.company.nextAction,
+        country: parsedData.company.country,
+        turnOverINR: parsedData.company.turnOverINR,
+        leadUsable: parsedData.company.leadUsable,
+        employeeCount: parsedData.company.employeeCount,
         totalNoOfManufUnits: Number(parsedData.company.totalNoOfManufUnits),
-
-        Reason: parsedData.company.Reason,
-        "About The Company": parsedData.company["About The Company"],
+        reason: parsedData.company.reason,
+        aboutTheCompany: parsedData.company.aboutTheCompany,
         dateField: parsedData.company.dateField,
       },
       contactInfo: {
         it: {
           name: parsedData.contact.itName,
+          dlExt: parsedData.contact.itDlExt,
+          designation: parsedData.contact.itDesignation,
+          mobile: parsedData.contact.itMobile,
           email: parsedData.contact.itEmail,
+          personalEmail: parsedData.contact.itPersonalEmail,
         },
         finance: {
           name: parsedData.contact.financeName,
+          dlExt: parsedData.contact.financeDlExt,
+          designation: parsedData.contact.financeDesignation,
+          mobile: parsedData.contact.financeMobile,
           email: parsedData.contact.financeEmail,
+          personalEmail: parsedData.contact.financePersonalEmail,
         },
         businessHead: {
           name: parsedData.contact.businessHeadName,
+          dlExt: parsedData.contact.businessHeadDlExt,
+          designation: parsedData.contact.businessHeadDesignation,
+          mobile: parsedData.contact.businessHeadMobile,
           email: parsedData.contact.businessHeadEmail,
+          personalEmail: parsedData.contact.businessHeadPersonalEmail,
         },
       },
       itLandscape: {
@@ -137,10 +150,10 @@ app.post("/api/leads", upload.single("file"), async (req, res) => {
           description: parsedData.description,
           selectedOption: parsedData.selectedOption,
           radioValue: parsedData.radioValue,
-          addedBy: parsedData.createdBy,
+          addedBy: new mongoose.Types.ObjectId(parsedData.createdBy),
         },
       ],
-      createdBy: parsedData.createdBy,
+      createdBy: new mongoose.Types.ObjectId(parsedData.createdBy),
     };
 
     if (req.file) {
@@ -151,28 +164,10 @@ app.post("/api/leads", upload.single("file"), async (req, res) => {
       };
     }
 
-    // Validate required fields
-    const requiredFields = [
-      "contactInfo.it.name",
-      "contactInfo.it.email",
-      "contactInfo.finance.name",
-      "contactInfo.finance.email",
-      "contactInfo.businessHead.name",
-      "contactInfo.businessHead.email",
-    ];
-
-    for (const field of requiredFields) {
-      const [section, role, key] = field.split(".");
-      if (!leadData[section][role][key]) {
-        return res.status(400).json({ error: `${field} is required` });
-      }
-    }
-
     const lead = new Lead(leadData);
-
     const savedLead = await lead.save();
 
-    await savedLead.populate("descriptions.addedBy", "name");
+    await savedLead.populate("descriptions.addedBy", "firstName");
     res.status(201).json({
       success: true,
       message: "Lead created successfully",
@@ -186,6 +181,7 @@ app.post("/api/leads", upload.single("file"), async (req, res) => {
     });
   }
 });
+
 
 // Helper function to safely convert string to ObjectId
 const safeObjectId = (id) => {
@@ -203,86 +199,64 @@ app.get(
   checkRole(["subuser", "supervisor", "admin"]),
   async (req, res) => {
     try {
-      const userId = req.user?._id;
-      const userRole = req.user?.role;
-      const userName = req.user?.firstName;
+      const userId = req.user?._id; // The user ID from the authenticated user
+      const userRole = req.user?.role; // The role of the authenticated user
 
-      if (!userId || !userName || !userRole) {
-        console.error("Invalid user data:", { userId, userRole, userName });
-        return res.status(400).json({
-          success: false,
-          error: "Invalid user data",
-          details: { userId, userRole, userName },
-        });
+      // Check if userId and userRole are valid
+      if (!userId || !userRole) {
+        return res.status(400).json({ error: "Invalid user data" });
       }
 
+      // Initialize the query object
       let query = {};
 
       if (userRole === "admin") {
-        // Admin can see all leads, so we don't need to filter
+        // Admin can see all leads, no need to modify the query
       } else {
-        let usersToInclude = [userName];
-        let userIds = [safeObjectId(userId)];
+        // Create an array of userIds including the current user
+        let userIds = [new mongoose.Types.ObjectId(userId)]; // Use 'new' to instantiate ObjectId
 
         if (userRole === "supervisor") {
+          // If the user is a supervisor, find their subusers
           const subusers = await User.find({
-            supervisor: safeObjectId(userId),
+            supervisor: userId, // Use the plain userId, no need to convert here
             role: "subuser",
-          }).select("_id firstName");
+          }).select("_id");
 
           if (subusers.length > 0) {
-            const subuserNames = subusers
-              .map((user) => user.firstName)
-              .filter(Boolean);
-            const subuserIds = subusers.map((user) => user._id).filter(Boolean);
-            usersToInclude = [...usersToInclude, ...subuserNames];
-            userIds = [...userIds, ...subuserIds];
+            // Map subusers to their ObjectIds
+            const subuserIds = subusers.map(
+              (user) => new mongoose.Types.ObjectId(user._id)
+            ); // Use 'new' to instantiate ObjectId
+            userIds = [...userIds, ...subuserIds]; // Include subuser IDs in the array
           }
         }
 
+        // Modify the query to find leads created by or assigned to the user(s)
         query = {
           $or: [
-            { createdBy: { $in: userIds } },
-            { "companyInfo.Lead Assigned To": { $in: usersToInclude } },
-            { createdBy: safeObjectId(userId) },
-            { "companyInfo.Lead Assigned To": userName },
+            { createdBy: { $in: userIds } }, // Include leads created by the user
+            { "companyInfo.leadAssignedTo": { $in: userIds } }, // Include leads assigned to the user(s) (updated field name)
           ],
         };
       }
 
-      const leads = await Lead.find(query, {
-        leadNumber: 1,
-        "companyInfo.Company Name": 1,
-        "companyInfo.Lead Assigned To": 1,
-        "companyInfo.Generic Phone 1": 1,
-        "companyInfo.Generic Phone 2": 1,
-        "companyInfo.Priority": 1,
-        "companyInfo.Next Action": 1,
-        "companyInfo.dateField": 1,
-        "contactInfo.it.name": 1,
-        "contactInfo.it.email": 1,
-        "itLandscape.netNew.Using ERP (y/n)": 1,
-        descriptions: 1,
-        createdAt: 1,
-        createdBy: 1,
-      })
-        .populate({
-          path: "createdBy",
-          select: "firstName",
-        })
+      // Fetch leads based on the constructed query
+      const leads = await Lead.find(query)
+        .populate("companyInfo.leadAssignedTo", "firstName lastName") // Populate assigned user (updated field name)
+        .populate("createdBy", "firstName lastName") // Populate creator's name
         .sort({ createdAt: -1 })
-        .limit(userRole === "admin" ? 0 : 10); // Remove limit for admin users
+        .limit(userRole === "admin" ? 0 : 10); // Limit results for non-admins
 
-      const filteredLeads = leads.filter((lead) => lead.createdBy !== null);
-
-      res.json(filteredLeads);
+      // Return the fetched leads
+      res.json(leads);
     } catch (error) {
-      console.error("Error in /api/leads route:", error);
+      // Log the error and send a 500 response
+      console.error("Error fetching leads:", error);
       res.status(500).json({
         success: false,
         error: "Error fetching leads",
         details: error.message,
-        stack: error.stack,
       });
     }
   }
@@ -302,6 +276,7 @@ app.get("/api/leads/:leadNumber", async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
+
 app.put("/api/leads/:leadNumber", async (req, res) => {
   try {
     const lead = await Lead.findOne({ leadNumber: req.params.leadNumber });
@@ -311,11 +286,11 @@ app.put("/api/leads/:leadNumber", async (req, res) => {
 
     // Field mapping to handle case sensitivity and naming differences
     const fieldMapping = {
-      "Generic email 1": "Generic Email 1",
-      "Generic phone 1": "Generic Phone 1",
-      "Lead Assigned to": "Lead Assigned To",
+      genericEmail1: "Generic Email 1", // Updated
+      genericPhone1: "Generic Phone 1", // Updated
+      leadAssignedTo: "Lead Assigned To", // Updated
 
-      BDM: "BDM",
+      bdm: "BDM", // Updated
     };
 
     // Helper function to recursively update nested objects with field mapping
@@ -391,8 +366,6 @@ app.post("/api/leads/:leadNumber/descriptions", async (req, res) => {
     res.status(500).json({ error: "Server error", details: error.message });
   }
 });
-
-// GET all users
 
 // Global error handler for PayloadTooLargeError
 app.use((err, req, res, next) => {
@@ -530,8 +503,6 @@ app.get("/api/users", async (req, res) => {
   }
 });
 
-
-
 app.put("/api/users/:userId", async (req, res) => {
   try {
     const user = await User.findByIdAndUpdate(req.params.userId, req.body, {
@@ -587,10 +558,107 @@ app.get("/api/users/:userId", async (req, res) => {
   }
 });
 
+app.get("/api/team-overview", authenticateToken, async (req, res) => {
+  try {
+    const userRole = req.user.role;
+    let users;
 
+    if (userRole === "admin") {
+      users = await User.find({}, "firstName lastName email role").populate(
+        "supervisor",
+        "firstName lastName"
+      );
+    } else if (userRole === "supervisor") {
+      users = await User.find(
+        { supervisor: req.user._id },
+        "firstName lastName email role"
+      );
+    } else {
+      return res.status(403).json({ error: "Unauthorized" });
+    }
 
+    // Make sure you send a valid JSON response
+    res.json({ users });
+  } catch (error) {
+    res
+      .status(500)
+      .json({ error: "Error fetching team data", details: error.message });
+  }
+});
 
+app.get("/api/users/:userId/leads", authenticateToken, async (req, res) => {
+  try {
+    const userId = req.params.userId;
 
+    // Fetch the leads associated with the user
+    const leads = await Lead.find({ createdBy: userId })
+      .populate("createdBy", "firstName lastName") // Populate user details
+      .populate("descriptions.addedBy", "firstName") // Populate descriptions
+      .exec(); // Make sure to execute the query
+
+    res.json({ leads }); // Return the full leads array
+  } catch (error) {
+    console.error("Error fetching leads:", error);
+    res.status(500).json({ error: "Error fetching leads" });
+  }
+});
+
+app.get("/api/leads/inactive", authenticateToken, async (req, res) => {
+  try {
+    const userRole = req.user.role;
+    const userId = req.user._id;
+
+    // Fetch all inactive users first
+    const inactiveUsers = await User.find({ status: "inactive" }).select(
+      "_id firstName lastName"
+    );
+
+    // For admin: fetch leads created by or assigned to inactive users
+    if (userRole === "admin") {
+      const inactiveUserIds = inactiveUsers.map((user) => user._id);
+      const inactiveUserNames = inactiveUsers.map(
+        (user) => `${user.firstName} ${user.lastName}`
+      );
+
+      const leads = await Lead.find({
+        "companyInfo.priority": { $in: ["hot", "warm", "cold"] }, // Updated field name
+        $or: [
+          { createdBy: { $in: inactiveUserIds } }, // Leads created by inactive users
+          { "companyInfo.leadAssignedTo": { $in: inactiveUserNames } }, // Leads assigned to inactive users (by name, updated field name)
+        ],
+      }).populate("createdBy", "firstName lastName");
+
+      return res.json(leads);
+    }
+
+    // For supervisor: fetch leads created or assigned to inactive sub-users under their supervision
+    if (userRole === "supervisor") {
+      const subUsers = await User.find({
+        supervisor: userId,
+        status: "inactive",
+      }).select("_id firstName lastName");
+      const subUserIds = subUsers.map((user) => user._id);
+      const subUserNames = subUsers.map(
+        (user) => `${user.firstName} ${user.lastName}`
+      );
+
+      const leads = await Lead.find({
+        "companyInfo.priority": { $in: ["hot", "warm", "cold"] }, // Updated field name
+        $or: [
+          { createdBy: { $in: subUserIds } }, // Leads created by supervised sub-users
+          { "companyInfo.leadAssignedTo": { $in: subUserNames } }, // Leads assigned to supervised sub-users
+        ],
+      }).populate("createdBy", "firstName lastName");
+
+      return res.json(leads);
+    }
+
+    return res.status(403).json({ message: "Forbidden" });
+  } catch (error) {
+    console.error("Error fetching inactive user leads:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+});
 
 // Start the server
 const PORT = process.env.PORT || 8080;

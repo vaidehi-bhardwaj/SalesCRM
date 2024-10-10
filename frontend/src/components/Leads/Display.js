@@ -11,7 +11,6 @@ const Display = () => {
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const currentUserId = localStorage.getItem("userId");
 
-
   const handleLeadClick = (leadNumber) => {
     setSelectedLead(leadNumber);
   };
@@ -24,16 +23,17 @@ const Display = () => {
   const handleLeadUpdate = () => {
     setRefreshTrigger((prev) => prev + 1); // Trigger a refresh when a lead is updated
   };
+
   useEffect(() => {
     const token = localStorage.getItem("token");
     const userRole = localStorage.getItem("userRole");
-  
 
     if (!token) {
       setError("No authentication token found. Please log in again.");
       setLoading(false);
       return;
     }
+
     const fetchLeads = async () => {
       try {
         const response = await axios.get(
@@ -66,13 +66,14 @@ const Display = () => {
       }
     };
 
-
     fetchLeads();
   }, [refreshTrigger, currentUserId]);
 
   const getAssignedUser = (lead) => {
-    const assigned = lead.companyInfo?.["Lead Assigned To"];
-    return assigned || "Not Assigned";
+    const assignedUser = lead.companyInfo?.leadAssignedTo; // Updated field name
+    return assignedUser
+      ? `${assignedUser.firstName} ${assignedUser.lastName}`
+      : "Not Assigned";
   };
 
   // Helper function to get the most recent description creation date
@@ -152,4 +153,5 @@ const Display = () => {
     </div>
   );
 };
+
 export default Display;
