@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import axios from "axios";
 import LeadDetails from "../Leads/LeadDetails"; // Ensure you have this component
+import "./UserLeads.css";
 
 const UserLeads = () => {
   const { userId } = useParams(); // Get userId from the route params
@@ -96,51 +97,53 @@ const UserLeads = () => {
   if (leads.length === 0) return <div>No leads found for this user.</div>;
 
   return (
-    <div>
-      <h2 className="display">Leads for User ID: {userId}</h2>
-      <table>
-        <thead>
-          <tr>
-            <th>Lead Number</th>
-            <th>Creation Date</th>
-            <th>Company Name</th>
-            <th>Latest Description Date</th>
-            <th>Created By</th>
-            <th>Assigned To</th>
-            <th>Phone</th>
-            <th>Action Date</th>
-            <th>Priority</th>
-            <th>Next Action</th>
-          </tr>
-        </thead>
-        <tbody>
-          {leads.map((lead) => (
-            <tr key={lead._id || lead.leadNumber}>
-              <td>
-                <button
-                  className="display-button"
-                  onClick={() => handleLeadClick(lead.leadNumber)}
-                >
-                  {lead.leadNumber || ""}
-                </button>
-              </td>
-              <td>{new Date(lead.createdAt).toLocaleDateString()}</td>
-              <td>{lead.companyInfo?.["Company Name"] || ""}</td>
-              <td>{getLatestDescriptionDate(lead)}</td>
-              <td>{lead.createdBy?.firstName || ""}</td>
-              <td>{getAssignedUser(lead)}</td>
-              <td>{getPhoneNumbers(lead)}</td>
-              <td>
-                {lead.companyInfo?.dateField
-                  ? new Date(lead.companyInfo.dateField).toLocaleDateString()
-                  : ""}
-              </td>
-              <td>{lead.companyInfo?.Priority || ""}</td>
-              <td>{lead.companyInfo?.["Next Action"] || ""}</td>
+    <div className="user-leads-container">
+      <h2 className="user-heading">Leads for User ID: {userId}</h2>
+      <div className="table-container">
+        <table className="user-table">
+          <thead>
+            <tr>
+              <th>Lead Number</th>
+              <th>Creation Date</th>
+              <th>Company Name</th>
+              <th>Latest Description Date</th>
+              <th>Created By</th>
+              <th>Assigned To</th>
+              <th>Phone</th>
+              <th>Action Date</th>
+              <th>Priority</th>
+              <th>Next Action</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {leads.map((lead) => (
+              <tr key={lead._id || lead.leadNumber}>
+                <td>
+                  <button
+                    className="display-button"
+                    onClick={() => handleLeadClick(lead.leadNumber)}
+                  >
+                    {lead.leadNumber || ""}
+                  </button>
+                </td>
+                <td>{new Date(lead.createdAt).toLocaleDateString()}</td>
+                <td>{lead.companyInfo?.["Company Name"] || ""}</td>
+                <td>{getLatestDescriptionDate(lead)}</td>
+                <td>{lead.createdBy?.firstName || ""}</td>
+                <td>{getAssignedUser(lead)}</td>
+                <td>{getPhoneNumbers(lead)}</td>
+                <td>
+                  {lead.companyInfo?.dateField
+                    ? new Date(lead.companyInfo.dateField).toLocaleDateString()
+                    : ""}
+                </td>
+                <td>{lead.companyInfo?.Priority || ""}</td>
+                <td>{lead.companyInfo?.["Next Action"] || ""}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
 
       {selectedLead && (
         <LeadDetails

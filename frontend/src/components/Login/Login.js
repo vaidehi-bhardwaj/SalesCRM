@@ -54,10 +54,10 @@ function Login({ setIsAuthenticated, setUserRole }) {
        setTimeout(() => {
          switch (role.toLowerCase()) {
            case "admin":
-             navigate("/admin/dashboard");
+             navigate("/home");
              break;
            case "supervisor":
-             navigate("/supervisor/dashboard");
+             navigate("/home");
              break;
            case "subuser":
            default:

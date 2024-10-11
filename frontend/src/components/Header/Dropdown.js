@@ -3,10 +3,10 @@ import { useNavigate } from "react-router-dom";
 
 // Define the mapping of dropdown items to paths
 const pathsByItem = {
-  "Create Leads": "/leads",
-  "Leads List": "/display",
+  "Create Leads": "/create-lead",
+  "Leads List": "/leads",
   BI: "/bi",
-  "Multiple Assign": "/multiple-assign",
+  "Multiple Assign": "/unassigned-leads",
   Overview: "/team-overview",
   "To-do List": "/todo",
   "User Management": "/user-management",

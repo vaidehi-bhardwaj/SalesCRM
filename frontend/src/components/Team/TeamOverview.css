@@ -1,0 +1,67 @@
+/* Team Overview Container */
+.user-management-container {
+  padding: 20px;
+  background-color: #f9f9f9; /* Light background for better contrast */
+}
+
+/* Heading */
+.user-heading {
+  font-size: 22px;
+  margin-bottom: 20px;
+  color: #2c3e50; /* Dark blue color for heading */
+}
+
+/* Error Message */
+.error-message {
+  color: red;
+  margin-bottom: 15px;
+}
+
+/* Table Container */
+.table-container {
+  margin-top: 10px;
+  overflow-x: auto; /* Allow horizontal scrolling for small screens */
+  padding: 10px;
+}
+
+/* Table Styling */
+.user-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 15px;
+}
+
+.user-table th,
+.user-table td {
+  border: 1px solid #ddd;
+  padding: 12px;
+  text-align: left;
+}
+
+.user-table th {
+  background-color: #f2f2f2;
+  font-weight: bold;
+}
+
+.user-table tr:nth-child(even) {
+  background-color: #f9f9f9;
+}
+
+.user-table tr:hover {
+  background-color: #f5f5f5;
+}
+
+/* Button Styling */
+.view-leads-btn {
+  background-color: #f39c12; /* Primary button color */
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s ease; /* Smooth transition for hover effect */
+}
+
+.view-leads-btn:hover {
+  opacity: 0.9; /* Hover effect */
+}

@@ -90,7 +90,7 @@ function App() {
             }
           />
           <Route
-            path="/leads"
+            path="/create-lead"
             element={
               <PrivateRoute
                 element={<CreateLeads />}
@@ -99,7 +99,7 @@ function App() {
             }
           />
           <Route
-            path="/display"
+            path="/leads"
             element={
               <PrivateRoute
                 element={<Display />}
@@ -173,7 +173,7 @@ function App() {
             }
           />
           <Route
-            path="/multiple-assign"
+            path="/unassigned-leads"
             element={
               <PrivateRoute
                 element={<UnassignedLeads/>}

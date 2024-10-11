@@ -1,15 +1,15 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
-
+import "./TeamOverview.css"; // Add the CSS file
 
 const TeamOverview = () => {
   const [users, setUsers] = useState([]);
-  const [error, setError] = useState(null); // Store error message if any
-  const navigate = useNavigate(); // Replace useHistory with useNavigate
+  const [error, setError] = useState(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
-    fetchUsers(); // Fetch users when component mounts
+    fetchUsers();
   }, []);
 
   const fetchUsers = async () => {
@@ -18,28 +18,27 @@ const TeamOverview = () => {
         "http://localhost:8080/api/team-overview",
         {
           headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`, // Authorization header
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
           },
         }
       );
-      setUsers(response.data.users); // Assuming the API returns { users: [...] }
+      setUsers(response.data.users);
     } catch (error) {
       console.error("Error fetching users:", error);
-      setError("Failed to fetch users. Please try again later."); // Store error message
+      setError("Failed to fetch users. Please try again later.");
     }
   };
 
   const viewLeads = (userId) => {
-    navigate(`/leads/${userId}`); // Navigate to leads page for the selected user
+    navigate(`/leads/${userId}`);
   };
 
   return (
-    <div className="team-overview-container">
-      <h1>Team Overview</h1>
-      {error && <p className="error-message">{error}</p>}{" "}
-      {/* Display error message if any */}
+    <div className="user-management-container">
+      <h1 className="user-heading">Team Overview</h1>
+      {error && <p className="error-message">{error}</p>}
       <div className="table-container">
-        <table className="team-overview-table">
+        <table className="user-table team-overview-table">
           <thead>
             <tr>
               <th>First Name</th>
@@ -58,7 +57,10 @@ const TeamOverview = () => {
                   <td>{user.email}</td>
                   <td>{user.role}</td>
                   <td>
-                    <button onClick={() => viewLeads(user._id)}>
+                    <button
+                      className="view-leads-btn"
+                      onClick={() => viewLeads(user._id)}
+                    >
                       View Leads
                     </button>
                   </td>
