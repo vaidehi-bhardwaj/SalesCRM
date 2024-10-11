@@ -178,7 +178,7 @@ const CreateLeads = () => {
     const newErrors = {};
     const validateSection = (config, data, section) => {
       config.flat().forEach((field) => {
-        if (field.required && !data[field.name]?.trim()) {
+        if (field.required && !data[field.name]?.toString().trim()) {
           newErrors[field.name] = `${field.label} is required`;
         }
         if (field.datePicker?.required && !data[field.datePicker.name]) {
@@ -213,38 +213,44 @@ const CreateLeads = () => {
     return Object.keys(newErrors).length === 0;
   }, [formData, file]);
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (validateForm()) {
-      try {
-        const formDataToSend = new FormData();
-        const dataToSend = {
-          ...formData,
-          createdBy: userId || null,
-        };
-        formDataToSend.append("data", JSON.stringify(dataToSend));
-        if (file) {
-          formDataToSend.append("file", file);
-        }
+ const handleSubmit = async (e) => {
+   e.preventDefault();
+   if (validateForm()) {
+     try {
+       const formDataToSend = new FormData();
+       const dataToSend = {
+         ...formData,
+         createdBy: userId || null,
+         company: {
+           ...formData.company,
+           leadNumber: formData.company.leadNumber
+             ? parseInt(formData.company.leadNumber, 10)
+             : undefined,
+         },
+       };
+       formDataToSend.append("data", JSON.stringify(dataToSend));
+       if (file) {
+         formDataToSend.append("file", file);
+       }
 
-        const response = await axios.post(
-          "http://localhost:8080/api/leads",
-          formDataToSend,
-          {
-            headers: { "Content-Type": "multipart/form-data" },
-          }
-        );
+       const response = await axios.post(
+         "http://localhost:8080/api/leads",
+         formDataToSend,
+         {
+           headers: { "Content-Type": "multipart/form-data" },
+         }
+       );
 
-        alert(
-          `Lead created successfully! Lead Number: ${response.data.leadNumber}`
-        );
-        resetForm();
-      } catch (error) {
-        console.error("Error saving data", error);
-        alert("Error saving data. Please try again.");
-      }
-    }
-  };
+       alert(
+         `Lead created successfully! Lead Number: ${response.data.leadNumber}`
+       );
+       resetForm();
+     } catch (error) {
+       console.error("Error saving data", error);
+       alert("Error saving data. Please try again.");
+     }
+   }
+ };
 
   return (
     <div>
@@ -274,7 +280,7 @@ const CreateLeads = () => {
               <label htmlFor="leadAssignedTo">Lead Assigned To:</label>
               <select
                 name="leadAssignedTo" // Updated field name
-                value={formData.company.leadAssignedTo || ""} // Updated field name
+                value={formData.company.leadAssignedTo || null} // Updated field name
                 onChange={(e) => handleChange(e, "company")}
                 className={errors.leadAssignedTo ? "mandatory" : ""} // Updated field name
               >

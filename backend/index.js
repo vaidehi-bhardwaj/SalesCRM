@@ -603,62 +603,63 @@ app.get("/api/users/:userId/leads", authenticateToken, async (req, res) => {
   }
 });
 
-app.get("/api/leads/inactive", authenticateToken, async (req, res) => {
-  try {
-    const userRole = req.user.role;
-    const userId = req.user._id;
+app.get(
+  "/api/leads",
+  authenticateToken,
+  checkRole(["subuser", "supervisor", "admin"]),
+  async (req, res) => {
+    try {
+      const userId = req.user?._id;
+      const userRole = req.user?.role;
 
-    // Fetch all inactive users first
-    const inactiveUsers = await User.find({ status: "inactive" }).select(
-      "_id firstName lastName"
-    );
-
-    // For admin: fetch leads created by or assigned to inactive users
-    if (userRole === "admin") {
-      const inactiveUserIds = inactiveUsers.map((user) => user._id);
-      const inactiveUserNames = inactiveUsers.map(
-        (user) => `${user.firstName} ${user.lastName}`
+      // Fetch inactive users
+      const inactiveUsers = await User.find({ status: "inactive" }).select(
+        "_id"
       );
 
-      const leads = await Lead.find({
-        "companyInfo.priority": { $in: ["hot", "warm", "cold"] }, // Updated field name
-        $or: [
-          { createdBy: { $in: inactiveUserIds } }, // Leads created by inactive users
-          { "companyInfo.leadAssignedTo": { $in: inactiveUserNames } }, // Leads assigned to inactive users (by name, updated field name)
+      const userIds = inactiveUsers.map((user) => user._id);
+
+      // Query to fetch leads for inactive users with specific priorities
+      let query = {
+        $and: [
+          { "companyInfo.priority": { $in: ["Hot", "Cold", "Warm"] } },
+          {
+            $or: [
+              { createdBy: { $in: userIds } },
+              { "companyInfo.leadAssignedTo": { $in: userIds } },
+            ],
+          },
         ],
-      }).populate("createdBy", "firstName lastName");
+      };
 
-      return res.json(leads);
+      // Restrict data for supervisor to only their subusers
+      if (userRole === "supervisor") {
+        const subusers = await User.find({
+          supervisor: userId,
+          role: "subuser",
+        }).select("_id");
+        const supervisorUserIds = subusers.map((user) => user._id);
+        query.$or.push({ createdBy: { $in: supervisorUserIds } });
+      }
+
+      // Fetch leads
+      const leads = await Lead.find(query)
+        .populate("companyInfo.leadAssignedTo", "firstName lastName")
+        .populate("createdBy", "firstName lastName")
+        .sort({ createdAt: -1 });
+
+      res.json(leads);
+    } catch (error) {
+      console.error("Error fetching leads:", error);
+      res.status(500).json({
+        success: false,
+        error: "Error fetching leads",
+        details: error.message,
+      });
     }
-
-    // For supervisor: fetch leads created or assigned to inactive sub-users under their supervision
-    if (userRole === "supervisor") {
-      const subUsers = await User.find({
-        supervisor: userId,
-        status: "inactive",
-      }).select("_id firstName lastName");
-      const subUserIds = subUsers.map((user) => user._id);
-      const subUserNames = subUsers.map(
-        (user) => `${user.firstName} ${user.lastName}`
-      );
-
-      const leads = await Lead.find({
-        "companyInfo.priority": { $in: ["hot", "warm", "cold"] }, // Updated field name
-        $or: [
-          { createdBy: { $in: subUserIds } }, // Leads created by supervised sub-users
-          { "companyInfo.leadAssignedTo": { $in: subUserNames } }, // Leads assigned to supervised sub-users
-        ],
-      }).populate("createdBy", "firstName lastName");
-
-      return res.json(leads);
-    }
-
-    return res.status(403).json({ message: "Forbidden" });
-  } catch (error) {
-    console.error("Error fetching inactive user leads:", error);
-    res.status(500).json({ message: "Server error" });
   }
-});
+);
+
 
 // Start the server
 const PORT = process.env.PORT || 8080;

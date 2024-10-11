@@ -18,7 +18,7 @@ import UserTable from "./components/Admin/UserTable";
 import ErrorBoundary from "./components/Admin/ErrorBoundary";
 import TeamOverview from "./components/Team/TeamOverview";
 import UserLeads from "./components/Team/UserLeads";
-import MultipleAssign from "./components/Supervisor/MultipleAssign";
+import UnassignedLeads from "./components/Supervisor/UnassignedLeads";
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -176,7 +176,7 @@ function App() {
             path="/multiple-assign"
             element={
               <PrivateRoute
-                element={<MultipleAssign />}
+                element={<UnassignedLeads/>}
                 allowedRoles={["admin", "supervisor"]}
               />
             }
