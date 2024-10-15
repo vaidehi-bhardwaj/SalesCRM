@@ -273,29 +273,6 @@ const CreateLeads = () => {
               ))}
             </FormRow>
           ))}
-
-          {/* Custom dropdown for "Lead Assigned To" */}
-          <FormRow>
-            <div className="form-group">
-              <label htmlFor="leadAssignedTo">Lead Assigned To:</label>
-              <select
-                name="leadAssignedTo" // Updated field name
-                value={formData.company.leadAssignedTo || null} // Updated field name
-                onChange={(e) => handleChange(e, "company")}
-                className={errors.leadAssignedTo ? "mandatory" : ""} // Updated field name
-              >
-                <option value="">Select Lead Assigned To</option>
-                {options.leadAssignedToOptions?.map((user) => (
-                  <option key={user._id} value={user._id}>
-                    {user.firstName} {user.lastName}
-                  </option>
-                ))}
-              </select>
-              {errors.leadAssignedTo && ( // Updated field name
-                <span className="error">{errors.leadAssignedTo}</span>
-              )}
-            </div>
-          </FormRow>
         </section>
 
         <section className="form-section">

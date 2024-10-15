@@ -126,7 +126,7 @@ const Display = () => {
                 </button>
               </td>
               <td>{new Date(lead.createdAt).toLocaleDateString()}</td>
-              <td>{lead.companyInfo?.["Company Name"] || ""}</td>
+              <td>{lead.companyInfo?.companyName || ""}</td>
               <td>{getLatestDescriptionDate(lead)}</td>
               <td>{lead.createdBy?.firstName || ""}</td>
               <td>{getAssignedUser(lead)}</td>
@@ -136,8 +136,8 @@ const Display = () => {
                   ? new Date(lead.companyInfo.dateField).toLocaleDateString()
                   : ""}
               </td>
-              <td>{lead.companyInfo?.Priority || ""}</td>
-              <td>{lead.companyInfo?.["Next Action"] || ""}</td>
+              <td>{lead.companyInfo?.priority || ""}</td>
+              <td>{lead.companyInfo?.nextAction|| ""}</td>
             </tr>
           ))}
         </tbody>

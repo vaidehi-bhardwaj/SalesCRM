@@ -193,7 +193,7 @@ export const itLandscapeConfig = {
       {
         name: "opportunityValue1", // Changed from "Opportunity Value 1" to "opportunityValue1"
         label: "Opportunity Value 1",
-        type: "select",
+        type: "text",
       },
     ],
     [

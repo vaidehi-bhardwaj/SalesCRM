@@ -17,7 +17,28 @@ const EditUserModal = ({ userId, onClose }) => {
   const [supervisors, setSupervisors] = useState([]); // Fetch supervisors
 
   // Fetch user details for editing
-  useEffect(() => {
+ useEffect(() => {
+   const fetchUserDetails = async () => {
+     try {
+       const response = await axios.get(
+         `http://localhost:8080/api/users/${userId}`
+       );
+       // Ensure the supervisor is displayed correctly
+       const { supervisor } = response.data;
+       setUserData({
+         ...response.data,
+         supervisor: supervisor ? supervisor._id : "", // Set supervisor ID if present
+       });
+     } catch (error) {
+       console.error("Error fetching user details:", error);
+     }
+   };
+
+   if (userId) {
+     fetchUserDetails();
+   }
+ }, [userId]);
+ useEffect(() => {
     const fetchUserDetails = async () => {
       try {
         const response = await axios.get(
@@ -53,6 +74,8 @@ const EditUserModal = ({ userId, onClose }) => {
     fetchSupervisors();
   }, []);
 
+
+  
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setUserData((prev) => ({
