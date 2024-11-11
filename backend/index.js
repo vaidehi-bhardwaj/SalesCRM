@@ -29,7 +29,7 @@ app.use(cors(corsOptions));
 app.use(bodyParser.json({ limit: "50mb" }));
 app.use(bodyParser.urlencoded({ limit: "50mb", extended: true }));
 
-// File upload configuration
+// File upload configuration 
 const upload = multer({
   limits: { fileSize: 50 * 1024 * 1024 }, // 50MB limit
 });
@@ -207,51 +207,92 @@ app.get(
         return res.status(400).json({ error: "Invalid user data" });
       }
 
-      // Initialize the query object
+      // Initialize the query object based on role-based filtering
       let query = {};
 
       if (userRole === "admin") {
         // Admin can see all leads, no need to modify the query
       } else {
-        // Create an array of userIds including the current user
-        let userIds = [new mongoose.Types.ObjectId(userId)]; // Use 'new' to instantiate ObjectId
+        let userIds = [new mongoose.Types.ObjectId(userId)]; // Include current user
 
         if (userRole === "supervisor") {
-          // If the user is a supervisor, find their subusers
+          // Find subusers if the user is a supervisor
           const subusers = await User.find({
-            supervisor: userId, // Use the plain userId, no need to convert here
+            supervisor: userId,
             role: "subuser",
           }).select("_id");
 
           if (subusers.length > 0) {
-            // Map subusers to their ObjectIds
             const subuserIds = subusers.map(
               (user) => new mongoose.Types.ObjectId(user._id)
-            ); // Use 'new' to instantiate ObjectId
+            );
             userIds = [...userIds, ...subuserIds]; // Include subuser IDs in the array
           }
         }
 
-        // Modify the query to find leads created by or assigned to the user(s)
+        // Role-based query for created or assigned leads
         query = {
           $or: [
-            { createdBy: { $in: userIds } }, // Include leads created by the user
-            { "companyInfo.leadAssignedTo": { $in: userIds } }, // Include leads assigned to the user(s) (updated field name)
+            { createdBy: { $in: userIds } },
+            { "companyInfo.leadAssignedTo": { $in: userIds } },
           ],
         };
       }
 
+      // Extract filter parameters from the request query
+      const {
+        companyName,
+        cityName,
+        vertical,
+        priority,
+        contactExpiry,
+        supportPartner,
+        turnOver,
+        leadType,
+        team,
+        allLeads,
+      } = req.query;
+
+      // Add additional filters to the query object
+      if (companyName)
+        query["companyInfo.companyName"] = {
+          $regex: companyName,
+          $options: "i",
+        };
+      if (cityName)
+        query["companyInfo.city"] = { $regex: cityName, $options: "i" };
+      if (vertical) query["companyInfo.vertical"] = vertical;
+      if (priority) query["companyInfo.priority"] = priority;
+      if (contactExpiry)
+        query["itLandscape.SAPInstalledBase.contractExpiry"] = contactExpiry;
+      if (supportPartner)
+        query["itLandscape.SAPInstalledBase.supportPartner"] = {
+          $regex: supportPartner,
+          $options: "i",
+        };
+      if (turnOver)
+        query["companyInfo.turnOverINR"] = { $regex: turnOver, $options: "i" };
+      if (leadType)
+        query["companyInfo.leadType"] = { $regex: leadType, $options: "i" };
+      if (team) query["companyInfo.leadAssignedTo"] = team;
+
+      // Filter leads created or assigned based on allLeads option
+      if (allLeads === "createdByMe") {
+        query.createdBy = userId;
+      } else if (allLeads === "assignedToMe") {
+        query["companyInfo.leadAssignedTo"] = userId;
+      }
+
       // Fetch leads based on the constructed query
       const leads = await Lead.find(query)
-        .populate("companyInfo.leadAssignedTo", "firstName lastName") // Populate assigned user (updated field name)
-        .populate("createdBy", "firstName lastName") // Populate creator's name
+        .populate("companyInfo.leadAssignedTo", "firstName lastName")
+        .populate("createdBy", "firstName lastName")
         .sort({ createdAt: -1 })
         .limit(userRole === "admin" ? 0 : 10); // Limit results for non-admins
 
       // Return the fetched leads
       res.json(leads);
     } catch (error) {
-      // Log the error and send a 500 response
       console.error("Error fetching leads:", error);
       res.status(500).json({
         success: false,
@@ -261,6 +302,7 @@ app.get(
     }
   }
 );
+
 
 // GET lead by lead number
 app.get("/api/leads/:leadNumber", async (req, res) => {
@@ -284,55 +326,29 @@ app.put("/api/leads/:leadNumber", async (req, res) => {
       return res.status(404).json({ error: "Lead not found" });
     }
 
-    // Field mapping to handle case sensitivity and naming differences
-    const fieldMapping = {
-      genericEmail1: "Generic Email 1", // Updated
-      genericPhone1: "Generic Phone 1", // Updated
-      leadAssignedTo: "Lead Assigned To", // Updated
-
-      bdm: "BDM", // Updated
-    };
-
-    // Helper function to recursively update nested objects with field mapping
-    const updateNestedObject = (target, source) => {
-      Object.keys(source).forEach((key) => {
-        const mappedKey = fieldMapping[key] || key;
-        if (
-          typeof source[key] === "object" &&
-          source[key] !== null &&
-          !Array.isArray(source[key])
-        ) {
-          if (!(mappedKey in target)) target[mappedKey] = {};
-          updateNestedObject(target[mappedKey], source[key]);
-        } else {
-          target[mappedKey] = source[key];
-        }
-      });
-    };
-
-    // Update companyInfo
+    // Update `companyInfo`, `contactInfo`, `itLandscape`, and `descriptions` if present in request
     if (req.body.companyInfo) {
-      updateNestedObject(lead.companyInfo, req.body.companyInfo);
+      Object.assign(lead.companyInfo, req.body.companyInfo);
+    }
+    if (req.body.contactInfo) {
+      Object.assign(lead.contactInfo, req.body.contactInfo);
+    }
+    if (req.body.itLandscape) {
+      Object.assign(lead.itLandscape, req.body.itLandscape);
+    }
+    if (req.body.descriptions) {
+      lead.descriptions = req.body.descriptions;
     }
 
-    // Update other sections
-    const fieldsToUpdate = ["contactInfo", "itLandscape", "descriptions"];
-    for (const field of fieldsToUpdate) {
-      if (req.body[field]) {
-        updateNestedObject(lead[field], req.body[field]);
-      }
-    }
-
-    // Ensure numeric fields are stored as numbers
-
+    // Save updated lead to the database
     await lead.save();
-
     res.json(lead);
   } catch (error) {
     console.error("Error updating lead:", error);
     res.status(400).json({ error: error.message });
   }
 });
+
 
 // POST new description for a lead
 app.post("/api/leads/:leadNumber/descriptions", async (req, res) => {

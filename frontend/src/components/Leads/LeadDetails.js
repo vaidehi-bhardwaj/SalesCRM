@@ -57,34 +57,35 @@ const LeadDetails = ({ leadNumber, onClose, onUpdate }) => {
     fetchOptions();
   }, []);
 
-  const handleInputChange = (e, section, subSection) => {
-    const { name, value } = e.target;
-    setEditedLead((prevLead) => {
-      const updatedLead = { ...prevLead };
-      if (section === "companyInfo") {
-        updatedLead.companyInfo = { ...updatedLead.companyInfo, [name]: value };
-      } else if (
-        section === "itLandscape" &&
-        subSection === "SAPInstalledBase"
-      ) {
-        updatedLead.itLandscape = {
-          ...updatedLead.itLandscape,
-          SAPInstalledBase: {
-            ...updatedLead.itLandscape.SAPInstalledBase,
-            [name]: value,
-          },
-        };
-      } else if (subSection) {
-        updatedLead[section] = {
-          ...updatedLead[section],
-          [subSection]: { ...updatedLead[section][subSection], [name]: value },
-        };
-      } else {
-        updatedLead[section] = { ...updatedLead[section], [name]: value };
-      }
-      return updatedLead;
-    });
-  };
+ const handleInputChange = (e, section, subSection) => {
+   const { name, value } = e.target;
+   setEditedLead((prevLead) => {
+     const updatedLead = { ...prevLead };
+     if (section === "companyInfo") {
+       updatedLead.companyInfo = { ...updatedLead.companyInfo, [name]: value };
+     } else if (
+       section === "itLandscape" &&
+       subSection === "SAPInstalledBase"
+     ) {
+       updatedLead.itLandscape = {
+         ...updatedLead.itLandscape,
+         SAPInstalledBase: {
+           ...updatedLead.itLandscape.SAPInstalledBase,
+           [name]: value,
+         },
+       };
+     } else if (subSection) {
+       updatedLead[section] = {
+         ...updatedLead[section],
+         [subSection]: { ...updatedLead[section][subSection], [name]: value },
+       };
+     } else {
+       updatedLead[section] = { ...updatedLead[section], [name]: value };
+     }
+     return updatedLead;
+   });
+ };
+
 
   const handleAddDescription = async () => {
     if (!newDescription.trim()) return;
@@ -102,29 +103,30 @@ const LeadDetails = ({ leadNumber, onClose, onUpdate }) => {
     }
   };
 
-  const handleSave = async () => {
-    try {
-      const leadToSave = {
-        ...editedLead,
-        itLandscape: {
-          ...editedLead.itLandscape,
-          SAPInstalledBase: editedLead.itLandscape?.SAPInstalledBase || {},
-        },
-      };
+ const handleSave = async () => {
+   try {
+     const leadToSave = {
+       ...editedLead,
+       itLandscape: {
+         ...editedLead.itLandscape,
+         SAPInstalledBase: editedLead.itLandscape?.SAPInstalledBase || {},
+       },
+     };
 
-      const response = await axios.put(
-        `http://localhost:8080/api/leads/${leadNumber}`,
-        leadToSave
-      );
-      setLead(response.data);
-      setEditMode(false);
-      onUpdate();
-    } catch (err) {
-      setError(
-        err.response?.data?.error || "An error occurred while saving changes"
-      );
-    }
-  };
+     const response = await axios.put(
+       `http://localhost:8080/api/leads/${leadNumber}`,
+       leadToSave
+     );
+     setLead(response.data);
+     setEditMode(false);
+     onUpdate();
+   } catch (err) {
+     setError(
+       err.response?.data?.error || "An error occurred while saving changes"
+     );
+   }
+ };
+
 
   if (loading) return <div>Loading...</div>;
   if (error) return <div>Error: {error}</div>;
