@@ -84,26 +84,34 @@ const EditUserModal = ({ userId, onClose }) => {
     }));
   };
 
-   const handleFormSubmit = async (e) => {
-     e.preventDefault();
+  const handleFormSubmit = async (e) => {
+    e.preventDefault();
 
-     const updatedUserData = {
-       ...userData,
-       supervisor: userData.supervisor === "" ? null : userData.supervisor, // Set supervisor to null if "No Supervisor" is selected
-     };
+    const updatedUserData = {
+      ...userData,
+      supervisor: userData.supervisor === "" ? null : userData.supervisor,
+    };
 
-     try {
-       await axios.put(
-         `http://localhost:8080/api/users/${userId}`,
-         updatedUserData
-       );
-       alert("User updated successfully!");
-       onClose();
-     } catch (error) {
-       console.error("Error updating user:", error);
-       alert("Error updating user");
-     }
-   };
+    try {
+      // Update the user
+      await axios.put(
+        `http://localhost:8080/api/users/${userId}`,
+        updatedUserData
+      );
+      alert("User updated successfully!");
+
+      // If the user was deactivated, reassign their leads
+      if (updatedUserData.status === "inactive") {
+        await axios.put(`/api/leads/reassign/${userId}`);
+      }
+
+      onClose();
+    } catch (error) {
+      console.error("Error updating user:", error);
+      alert("Error updating user");
+    }
+  };
+
 
   return (
     <form className="user-form" onSubmit={handleFormSubmit}>
