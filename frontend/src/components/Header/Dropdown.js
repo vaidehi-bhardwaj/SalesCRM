@@ -6,7 +6,7 @@ const pathsByItem = {
   "Create Leads": "/create-lead",
   "Leads List": "/leads",
   BI: "/bi",
-  "Multiple Assign": "/unassigned-leads",
+  "Unassigned Leads": "/unassigned-leads",
   Overview: "/team-overview",
   "To-do List": "/todo",
   "User Management": "/user-management",

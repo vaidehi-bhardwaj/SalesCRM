@@ -12,7 +12,7 @@ const headerButtonsByRole = {
     { name: "Lead", items: ["Create Leads"] },
     {
       name: "Lead Details",
-      items: ["Leads List", "BI", "Multiple Assign"],
+      items: ["Leads List", "Multiple Assign", "Unassigned Leads", "BI"],
     },
     { name: "Team", items: ["Overview"] },
     { name: "To-do", items: ["To-do List"] },
@@ -21,7 +21,7 @@ const headerButtonsByRole = {
   admin: [
     {
       name: "Leads",
-      items: ["Leads List"],
+      items: ["Leads List", "Unassigned Leads"],
     },
     { name: "To-do", items: ["To-do List"] },
     { name: "Team", items: ["Overview"] },

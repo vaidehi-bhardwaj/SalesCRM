@@ -12,7 +12,7 @@ import CreateLeads from "./components/CreateLeads/CreateLeads";
 import Display from "./components/Leads/Display";
 import LeadDetails from "./components/Leads/LeadDetails";
 import AdminDashboard from "./components/Admin/AdminDashboard";
-import SupervisorDashboard from "./components/Dashboards/SupervisorDashboard";
+
 import AddUser from "./components/Admin/AddUser";
 import UserTable from "./components/Admin/UserTable";
 import ErrorBoundary from "./components/Admin/ErrorBoundary";
@@ -126,15 +126,7 @@ function App() {
               />
             }
           />
-          <Route
-            path="/supervisor/dashboard"
-            element={
-              <PrivateRoute
-                element={<SupervisorDashboard />}
-                allowedRoles={["supervisor", "admin"]}
-              />
-            }
-          />
+         
 
           <Route
             path="/add-user"
@@ -196,8 +188,5 @@ function App() {
     </div>
   );
 }
-
-
-
 
 export default App;

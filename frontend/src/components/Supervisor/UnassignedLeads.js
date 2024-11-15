@@ -1,16 +1,18 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import LeadDetails from "../Leads/LeadDetails";
+import "./UnassignedLeads.css"; // Add a dedicated CSS file for this component
 
 const UnassignedLeads = () => {
   const [leads, setLeads] = useState([]);
   const [activeUsers, setActiveUsers] = useState([]);
   const [selectedLeads, setSelectedLeads] = useState([]); // State for selected lead IDs
-  const [selectedUserId, setSelectedUserId] = useState("");
+  const [selectedUserId, setSelectedUserId] = useState(""); // State for selected user ID
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showLeadDetails, setShowLeadDetails] = useState(null); // For showing lead details
 
+  // Fetch unassigned leads
   useEffect(() => {
     const fetchLeads = async () => {
       try {
@@ -33,6 +35,7 @@ const UnassignedLeads = () => {
     fetchLeads();
   }, []);
 
+  // Fetch active users
   useEffect(() => {
     const fetchActiveUsers = async () => {
       try {
@@ -53,61 +56,61 @@ const UnassignedLeads = () => {
     fetchActiveUsers();
   }, []);
 
-  // Function to handle lead selection for bulk assignment
+  // Handle lead selection for bulk assignment
   const handleLeadSelection = (leadId) => {
-    setSelectedLeads((prevSelectedLeads) =>
-      prevSelectedLeads.includes(leadId)
-        ? prevSelectedLeads.filter((id) => id !== leadId)
-        : [...prevSelectedLeads, leadId]
+    setSelectedLeads(
+      (prevSelectedLeads) =>
+        prevSelectedLeads.includes(leadId)
+          ? prevSelectedLeads.filter((id) => id !== leadId) // Deselect if already selected
+          : [...prevSelectedLeads, leadId] // Add to selection otherwise
     );
   };
 
-  // Function to handle bulk assignment of selected leads
- const handleAssignLead = async () => {
-   try {
-     await axios.put(
-       "http://localhost:8080/api/leads/assign-bulk",
-       { leadIds: selectedLeads, assignedUserId: selectedUserId },
-       {
-         headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-       }
-     );
+  // Handle bulk assignment of selected leads
+  const handleAssignLead = async () => {
+    if (selectedLeads.length === 0 || !selectedUserId) {
+      setError("Please select leads and a user before assigning.");
+      return;
+    }
 
-     // Update the leads state to reflect the new assigned user in real-time
-     setLeads((prevLeads) =>
-       prevLeads.map((lead) =>
-         selectedLeads.includes(lead._id)
-           ? {
-               ...lead,
-               companyInfo: {
-                 ...lead.companyInfo,
-                 leadAssignedTo: activeUsers.find(
-                   (user) => user._id === selectedUserId
-                 ),
-               },
-             }
-           : lead
-       )
-     );
+    try {
+      await axios.put(
+        "http://localhost:8080/api/leads/assign-bulk",
+        { leadIds: selectedLeads, assignedUserId: selectedUserId },
+        {
+          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+        }
+      );
 
-     // Clear selections after successful assignment
-     setSelectedLeads([]);
-     setSelectedUserId("");
-   } catch (err) {
-     setError("Error assigning leads");
-   }
- };
+      // Refresh leads list to remove reassigned leads
+      const response = await axios.get(
+        "http://localhost:8080/api/unassigned-leads",
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        }
+      );
+      setLeads(response.data);
+
+      // Reset selection and user after successful assignment
+      setSelectedLeads([]);
+      setSelectedUserId("");
+    } catch (err) {
+      setError("Error assigning leads");
+    }
+  };
 
   const handleReassignClick = (leadId) => {
-    setSelectedLeads([leadId]); // Select a single lead for individual reassignment
+    setSelectedLeads([leadId]); // Select a single lead for reassignment
   };
 
   const handleLeadClick = (leadId) => {
-    setShowLeadDetails(leadId); // Set the lead ID to open details
+    setShowLeadDetails(leadId); // Show details for the selected lead
   };
 
   const handleCloseDetails = () => {
-    setShowLeadDetails(null); // Close lead details
+    setShowLeadDetails(null); // Close the lead details modal
   };
 
   if (loading) return <div>Loading...</div>;
@@ -115,7 +118,7 @@ const UnassignedLeads = () => {
   if (leads.length === 0) return <div>No unassigned leads found</div>;
 
   return (
-    <div>
+    <div className="unassigned">
       <h2>Unassigned Leads</h2>
       <div>
         <select
@@ -132,6 +135,7 @@ const UnassignedLeads = () => {
         <button
           onClick={handleAssignLead}
           disabled={selectedLeads.length === 0 || !selectedUserId}
+          className="bulk-assign-button"
         >
           Bulk Assign
         </button>
@@ -155,6 +159,7 @@ const UnassignedLeads = () => {
                   type="checkbox"
                   checked={selectedLeads.includes(lead._id)}
                   onChange={() => handleLeadSelection(lead._id)}
+                  className="lead-checkbox"
                 />
               </td>
               <td>
@@ -171,7 +176,8 @@ const UnassignedLeads = () => {
               }`}</td>
               <td>{lead.companyInfo?.priority}</td>
               <td>
-                {selectedLeads.includes(lead._id) ? (
+                {selectedLeads.includes(lead._id) &&
+                selectedLeads.length === 1 ? (
                   <>
                     <select
                       onChange={(e) => setSelectedUserId(e.target.value)}
@@ -184,11 +190,24 @@ const UnassignedLeads = () => {
                         </option>
                       ))}
                     </select>
-                    <button onClick={handleAssignLead}>Confirm</button>
-                    <button onClick={() => setSelectedLeads([])}>Cancel</button>
+                    <button
+                      onClick={handleAssignLead}
+                      className="confirm-button"
+                    >
+                      Confirm
+                    </button>
+                    <button
+                      onClick={() => setSelectedLeads([])}
+                      className="cancel-button"
+                    >
+                      Cancel
+                    </button>
                   </>
                 ) : (
-                  <button onClick={() => handleReassignClick(lead._id)}>
+                  <button
+                    className="reassign-btn"
+                    onClick={() => handleReassignClick(lead._id)}
+                  >
                     Reassign
                   </button>
                 )}

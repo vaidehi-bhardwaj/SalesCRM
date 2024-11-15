@@ -1,0 +1,77 @@
+.unassigned {
+  padding: 20px;
+  font-family: Arial, sans-serif;
+}
+
+.unassigned h2 {
+  color: #333;
+  font-size: 1.8em;
+  font-weight: bold;
+}
+
+.unassigned select, .unassigned button {
+  margin-right: 8px;
+  padding: 8px;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+  font-size: 1em;
+}
+
+.unassigned table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+}
+
+.unassigned th, .unassigned td {
+  padding: 10px;
+  text-align: left;
+  border-bottom: 1px solid #ddd;
+}
+
+.unassigned th {
+  background-color: #f4f4f4;
+}
+
+.unassigned td {
+  background-color: #fff;
+}
+
+.unassigned .lead-number-button {
+   background-color:  #f39c12;
+  color: white;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.unassigned .lead-number-button:hover {
+ background-color: #b5730d;
+}
+
+.unassigned .confirm-button, .unassigned .cancel-button {
+  margin-left: 8px;
+}
+
+.unassigned .bulk-assign-button {
+  background-color: #f39c12;
+  color: white;
+  cursor: pointer;
+}
+
+.unassigned .bulk-assign-button:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+.unassigned .lead-checkbox {
+  cursor: pointer;
+}
+
+.reassign-btn{
+   background-color: #f39c12;
+  color: white;
+  cursor: pointer;
+}

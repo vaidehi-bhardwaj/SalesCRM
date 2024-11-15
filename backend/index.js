@@ -307,11 +307,17 @@ app.put("/api/leads/assign-bulk", authenticateToken, async (req, res) => {
   const { leadIds, assignedUserId } = req.body;
 
   try {
+    // Validate `assignedUserId`
+    if (!mongoose.Types.ObjectId.isValid(assignedUserId)) {
+      return res.status(400).json({ error: "Invalid assigned user ID." });
+    }
+
     const assignedUser = await User.findById(assignedUserId);
     if (!assignedUser || assignedUser.status !== "active") {
       return res.status(400).json({ error: "Assigned user must be active." });
     }
 
+    // Update the leads
     await Lead.updateMany(
       { _id: { $in: leadIds } },
       { "companyInfo.leadAssignedTo": assignedUserId }
@@ -320,9 +326,12 @@ app.put("/api/leads/assign-bulk", authenticateToken, async (req, res) => {
     res.status(200).json({ message: "Leads assigned successfully." });
   } catch (error) {
     console.error("Error assigning leads:", error);
-    res.status(500).json({ error: "Error assigning leads" });
+    res
+      .status(500)
+      .json({ error: "Error assigning leads", details: error.message });
   }
 });
+
 
 // GET lead by lead number
 app.get("/api/leads/:leadNumber", async (req, res) => {
@@ -642,58 +651,56 @@ app.get("/api/users/:userId/leads", authenticateToken, async (req, res) => {
 // Get unassigned leads for inactive users with specific priorities
 app.get("/api/unassigned-leads", authenticateToken, async (req, res) => {
   try {
-    const userId = req.user._id; // Current logged-in user
-    const userRole = req.user.role; // Role of the current user
-
-    let inactiveUserIds = [];
+    const userId = req.user._id;
+    const userRole = req.user.role;
 
     if (userRole === "admin") {
-      // Admin can see all leads assigned to inactive users and unassigned leads
       const inactiveUsers = await User.find({ status: "inactive" }, "_id");
-      inactiveUserIds = inactiveUsers.map((user) => user._id);
+      const inactiveUserIds = inactiveUsers.map((user) => user._id);
 
-      // Query to fetch both unassigned leads and leads assigned to inactive users
       const leads = await Lead.find({
         $or: [
           { "companyInfo.leadAssignedTo": { $in: inactiveUserIds } },
-          { "companyInfo.leadAssignedTo": { $exists: false } }, // Unassigned leads
+          { "companyInfo.leadAssignedTo": null },
         ],
-        "companyInfo.priority": { $in: ["Cold", "Hot", "Warm"] }, // Include priorities if needed
       })
         .populate("companyInfo.leadAssignedTo", "firstName lastName")
         .populate("createdBy", "firstName lastName");
 
-      res.json(leads);
+      return res.json(leads);
     } else if (userRole === "supervisor") {
-      // Supervisor can only see leads assigned to their inactive subordinates
-      const subordinates = await User.find(
-        { supervisor: userId, status: "inactive" },
+      const inactiveSubordinates = await User.find(
+        {
+          supervisor: userId,
+          status: "inactive",
+        },
         "_id"
       );
-      inactiveUserIds = subordinates.map((user) => user._id);
+      const inactiveUserIds = inactiveSubordinates.map((user) => user._id);
 
-      // Query for supervisor to fetch only leads assigned to inactive subordinates
       const leads = await Lead.find({
-        "companyInfo.leadAssignedTo": { $in: inactiveUserIds },
-        "companyInfo.priority": { $in: ["Cold", "Hot", "Warm"] },
+        $or: [
+          { createdBy: userId, "companyInfo.leadAssignedTo": null },
+          { "companyInfo.leadAssignedTo": { $in: inactiveUserIds } },
+        ],
       })
         .populate("companyInfo.leadAssignedTo", "firstName lastName")
         .populate("createdBy", "firstName lastName");
 
-      res.json(leads);
+      return res.json(leads);
     } else {
-      // Block access for other roles
       return res.status(403).json({ error: "Unauthorized" });
     }
   } catch (error) {
     console.error("Error fetching unassigned leads:", error);
-    res.status(500).json({
-      error: "Error fetching unassigned leads",
-      details: error.message,
-    });
+    res
+      .status(500)
+      .json({
+        error: "Error fetching unassigned leads",
+        details: error.message,
+      });
   }
 });
-
 
 
 // Fetch all active users
@@ -751,9 +758,6 @@ app.put(
     }
   }
 );
-
-
-
 
 
 // Start the server
