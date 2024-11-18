@@ -19,7 +19,7 @@ import ErrorBoundary from "./components/Admin/ErrorBoundary";
 import TeamOverview from "./components/Team/TeamOverview";
 import UserLeads from "./components/Team/UserLeads";
 import UnassignedLeads from "./components/Supervisor/UnassignedLeads";
-// import MultipleAssign from "./components/Supervisor/MultipleAssign";
+import MultipleAssign from "./components/Supervisor/MultipleAssign";
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -174,7 +174,7 @@ function App() {
               />
             }
           />
-          {/* <Route
+          <Route
             path="/multiple-assign"
             element={
               <PrivateRoute
@@ -182,7 +182,7 @@ function App() {
                 allowedRoles={["supervisor"]}
               />
             }
-          /> */}
+          /> 
         </Route>
       </Routes>
     </div>

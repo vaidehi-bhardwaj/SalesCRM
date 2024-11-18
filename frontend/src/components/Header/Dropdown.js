@@ -11,6 +11,7 @@ const pathsByItem = {
   "To-do List": "/todo",
   "User Management": "/user-management",
   "Change Password": "/reset-password",
+  "Multiple Assign": "/multiple-assign",
 };
 
 function Dropdown({ name, items, isOpen, toggleDropdown }) {

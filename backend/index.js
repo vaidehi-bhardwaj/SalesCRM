@@ -41,15 +41,21 @@ app.use("/api/options", OptionsRouter);
 const authenticateToken = (req, res, next) => {
   const authHeader = req.headers["authorization"];
   const token = authHeader && authHeader.split(" ")[1];
+  console.log("Authorization Header:", authHeader);
 
-  if (token == null) return res.sendStatus(401);
+  if (!token) return res.status(401).send("Token missing");
 
   jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
-    if (err) return res.sendStatus(403);
+    if (err) {
+      console.error("Token verification error:", err);
+      return res.status(403).send("Token invalid");
+    }
+    console.log("Decoded User:", user);
     req.user = user;
     next();
   });
 };
+
 
 const checkRole = (roles) => (req, res, next) => {
   if (!req.user) {
@@ -192,6 +198,35 @@ const safeObjectId = (id) => {
     return id; // Return the original string if conversion fails
   }
 };
+app.get("/api/assigned-leads", authenticateToken, async (req, res) => {
+   console.log("Route hit: /api/assigned-leads");
+  try {
+    const userId = req.user._id; // The logged-in user's ID
+console.log("User ID:", userId);
+    // Query to fetch leads assigned to the logged-in user
+    const leads = await Lead.find({
+      "companyInfo.leadAssignedTo": userId,
+    })
+      .populate("companyInfo.leadAssignedTo", "firstName lastName") // Optional, if you want to include assigned user's name
+      .populate("createdBy", "firstName lastName") // Optional, for creator details
+      .sort({ createdAt: -1 });
+console.log("Leads fetched:", leads);
+    if (!leads || leads.length === 0) {
+      return res
+        .status(200)
+        .json({ message: "No leads assigned to you.", leads: [] });
+    }
+
+    res.json(leads);
+  } catch (error) {
+    console.error("Error fetching assigned leads:", error);
+    res.status(500).json({
+      success: false,
+      error: "Error fetching assigned leads",
+      details: error.message,
+    });
+  }
+});
 
 app.get(
   "/api/leads",
@@ -657,11 +692,14 @@ app.get("/api/unassigned-leads", authenticateToken, async (req, res) => {
     if (userRole === "admin") {
       const inactiveUsers = await User.find({ status: "inactive" }, "_id");
       const inactiveUserIds = inactiveUsers.map((user) => user._id);
-
+   
       const leads = await Lead.find({
         $or: [
           { "companyInfo.leadAssignedTo": { $in: inactiveUserIds } },
           { "companyInfo.leadAssignedTo": null },
+          
+       
+
         ],
       })
         .populate("companyInfo.leadAssignedTo", "firstName lastName")
@@ -677,11 +715,23 @@ app.get("/api/unassigned-leads", authenticateToken, async (req, res) => {
         "_id"
       );
       const inactiveUserIds = inactiveSubordinates.map((user) => user._id);
+   const allSubusers = await User.find({ supervisor: userId }, "_id status");
+   const activeUserIds = allSubusers
+     .filter((user) => user.status === "active")
+     .map((user) => user._id);
 
       const leads = await Lead.find({
         $or: [
           { createdBy: userId, "companyInfo.leadAssignedTo": null },
           { "companyInfo.leadAssignedTo": { $in: inactiveUserIds } },
+          {
+            createdBy: { $in: inactiveUserIds },
+            "companyInfo.leadAssignedTo": null,
+          },
+          {
+            createdBy: { $in: activeUserIds },
+            "companyInfo.leadAssignedTo": null,
+          },
         ],
       })
         .populate("companyInfo.leadAssignedTo", "firstName lastName")
@@ -758,6 +808,7 @@ app.put(
     }
   }
 );
+
 
 
 // Start the server

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import LeadDetails from "../Leads/LeadDetails";
+import "./UnassignedLeads.css"; // Reusing the existing CSS file for consistency
 
 const MultipleAssign = () => {
   const [leads, setLeads] = useState([]);
@@ -9,23 +9,23 @@ const MultipleAssign = () => {
   const [selectedUserId, setSelectedUserId] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [showLeadDetails, setShowLeadDetails] = useState(null);
 
-  // Fetch assigned leads for the supervisor
+  // Fetch leads assigned to the logged-in user
   useEffect(() => {
     const fetchLeads = async () => {
       try {
         const response = await axios.get(
-          "http://localhost:8080/api/leads", // Endpoint to get leads assigned to the supervisor
+          "http://localhost:8080/api/assigned-leads",
           {
             headers: {
               Authorization: `Bearer ${localStorage.getItem("token")}`,
             },
           }
         );
-        setLeads(response.data);
+           setLeads(response.data.leads || []); 
       } catch (err) {
-        setError(err.response?.data?.details || "An unknown error occurred");
+        setError(err.response?.data?.details || "An error occurred");
+           setLeads([]);
       } finally {
         setLoading(false);
       }
@@ -34,12 +34,12 @@ const MultipleAssign = () => {
     fetchLeads();
   }, []);
 
-  // Fetch active users under the supervisor
+  // Fetch active users for bulk assignment
   useEffect(() => {
     const fetchActiveUsers = async () => {
       try {
         const response = await axios.get(
-          "http://localhost:8080/api/active-users", // Endpoint to get active users for supervisor
+          "http://localhost:8080/api/active-users",
           {
             headers: {
               Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -55,7 +55,7 @@ const MultipleAssign = () => {
     fetchActiveUsers();
   }, []);
 
-  // Function to handle lead selection for bulk assignment
+  // Handle lead selection
   const handleLeadSelection = (leadId) => {
     setSelectedLeads((prevSelectedLeads) =>
       prevSelectedLeads.includes(leadId)
@@ -64,60 +64,48 @@ const MultipleAssign = () => {
     );
   };
 
-  // Function to handle bulk assignment of selected leads
+  // Handle bulk assignment
   const handleAssignLead = async () => {
-    try {
-      await axios.put(
-        "http://localhost:8080/api/leads/assign-bulk", // Bulk assign endpoint
-        { leadIds: selectedLeads, assignedUserId: selectedUserId },
-        {
-          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-        }
-      );
-
-      // Update the leads state to reflect the new assigned user in real-time
-      setLeads((prevLeads) =>
-        prevLeads.map((lead) =>
-          selectedLeads.includes(lead._id)
-            ? {
-                ...lead,
-                companyInfo: {
-                  ...lead.companyInfo,
-                  leadAssignedTo: activeUsers.find(
-                    (user) => user._id === selectedUserId
-                  ),
-                },
-              }
-            : lead
-        )
-      );
-
-      // Clear selections after successful assignment
-      setSelectedLeads([]);
-      setSelectedUserId("");
-    } catch (err) {
-      setError("Error assigning leads");
+    if (selectedLeads.length === 0 || !selectedUserId) {
+      setError("Please select leads and a user before assigning.");
+      return;
     }
-  };
 
-  const handleReassignClick = (leadId) => {
-    setSelectedLeads([leadId]); // Select a single lead for individual reassignment
-  };
+  try {
+    const response = await axios.put(
+      "http://localhost:8080/api/leads/assign-bulk",
+      { leadIds: selectedLeads, assignedUserId: selectedUserId },
+      {
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+      }
+    );
+    console.log(response.data.message); // Log success message
+    alert("Leads assigned successfully!");
 
-  const handleLeadClick = (leadId) => {
-    setShowLeadDetails(leadId); // Set the lead ID to open details
-  };
+    // Refresh the leads list
+    const leadsResponse = await axios.get(
+      "http://localhost:8080/api/assigned-leads",
+      {
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+      }
+    );
+    setLeads(leadsResponse.data); // Update leads in the UI
+  } catch (error) {
+    console.error(
+      "Error assigning leads:",
+      error.response?.data || error.message
+    );
+    alert("Failed to assign leads. Please try again.");
+  }
 
-  const handleCloseDetails = () => {
-    setShowLeadDetails(null); // Close lead details
   };
 
   if (loading) return <div>Loading...</div>;
   if (error) return <div>Error: {error}</div>;
-  if (leads.length === 0) return <div>No assigned leads found</div>;
+  if (leads.length === 0) return <div>No leads found</div>;
 
   return (
-    <div>
+    <div className="unassigned">
       <h2>Assigned Leads</h2>
       <div>
         <select
@@ -134,6 +122,7 @@ const MultipleAssign = () => {
         <button
           onClick={handleAssignLead}
           disabled={selectedLeads.length === 0 || !selectedUserId}
+          className="bulk-assign-button"
         >
           Bulk Assign
         </button>
@@ -144,9 +133,7 @@ const MultipleAssign = () => {
             <th>Select</th>
             <th>Lead Number</th>
             <th>Company Name</th>
-            <th>Assigned To</th>
             <th>Priority</th>
-            <th>Reassign Lead</th>
           </tr>
         </thead>
         <tbody>
@@ -157,56 +144,16 @@ const MultipleAssign = () => {
                   type="checkbox"
                   checked={selectedLeads.includes(lead._id)}
                   onChange={() => handleLeadSelection(lead._id)}
+                  className="lead-checkbox"
                 />
               </td>
-              <td>
-                <button
-                  onClick={() => handleLeadClick(lead.leadNumber)}
-                  className="lead-number-button"
-                >
-                  {lead.leadNumber || ""}
-                </button>
-              </td>
+              <td>{lead.leadNumber}</td>
               <td>{lead.companyInfo?.companyName || ""}</td>
-              <td>{`${lead.companyInfo.leadAssignedTo?.firstName || ""} ${
-                lead.companyInfo.leadAssignedTo?.lastName || ""
-              }`}</td>
-              <td>{lead.companyInfo?.priority}</td>
-              <td>
-                {selectedLeads.includes(lead._id) ? (
-                  <>
-                    <select
-                      onChange={(e) => setSelectedUserId(e.target.value)}
-                      value={selectedUserId}
-                    >
-                      <option value="">Select a user</option>
-                      {activeUsers.map((user) => (
-                        <option key={user._id} value={user._id}>
-                          {user.firstName} {user.lastName}
-                        </option>
-                      ))}
-                    </select>
-                    <button onClick={handleAssignLead}>Confirm</button>
-                    <button onClick={() => setSelectedLeads([])}>Cancel</button>
-                  </>
-                ) : (
-                  <button onClick={() => handleReassignClick(lead._id)}>
-                    Reassign
-                  </button>
-                )}
-              </td>
+              <td>{lead.companyInfo?.priority || ""}</td>
             </tr>
           ))}
         </tbody>
       </table>
-
-      {/* Show LeadDetails component when a lead is selected */}
-      {showLeadDetails && (
-        <LeadDetails
-          leadNumber={showLeadDetails}
-          onClose={handleCloseDetails}
-        />
-      )}
     </div>
   );
 };

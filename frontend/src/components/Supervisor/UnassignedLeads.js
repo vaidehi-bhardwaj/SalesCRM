@@ -142,79 +142,71 @@ const UnassignedLeads = () => {
       </div>
       <table>
         <thead>
-          <tr>
-            <th>Select</th>
-            <th>Lead Number</th>
-            <th>Company Name</th>
-            <th>Assigned To (Inactive)</th>
-            <th>Priority</th>
-            <th>Reassign Lead</th>
-          </tr>
-        </thead>
+  <tr>
+    <th>Select</th>
+    <th>Lead Number</th>
+    <th>Company Name</th>
+    <th>Assigned To (Inactive)</th>
+    <th>Priority</th>
+    <th>Created By</th> 
+    <th>Reassign Lead</th>
+  </tr>
+</thead>
         <tbody>
-          {leads.map((lead) => (
-            <tr key={lead._id}>
-              <td>
-                <input
-                  type="checkbox"
-                  checked={selectedLeads.includes(lead._id)}
-                  onChange={() => handleLeadSelection(lead._id)}
-                  className="lead-checkbox"
-                />
-              </td>
-              <td>
-                <button
-                  onClick={() => handleLeadClick(lead.leadNumber)}
-                  className="lead-number-button"
-                >
-                  {lead.leadNumber || ""}
-                </button>
-              </td>
-              <td>{lead.companyInfo?.companyName || ""}</td>
-              <td>{`${lead.companyInfo.leadAssignedTo?.firstName || ""} ${
-                lead.companyInfo.leadAssignedTo?.lastName || ""
-              }`}</td>
-              <td>{lead.companyInfo?.priority}</td>
-              <td>
-                {selectedLeads.includes(lead._id) &&
-                selectedLeads.length === 1 ? (
-                  <>
-                    <select
-                      onChange={(e) => setSelectedUserId(e.target.value)}
-                      value={selectedUserId}
-                    >
-                      <option value="">Select a user</option>
-                      {activeUsers.map((user) => (
-                        <option key={user._id} value={user._id}>
-                          {user.firstName} {user.lastName}
-                        </option>
-                      ))}
-                    </select>
-                    <button
-                      onClick={handleAssignLead}
-                      className="confirm-button"
-                    >
-                      Confirm
-                    </button>
-                    <button
-                      onClick={() => setSelectedLeads([])}
-                      className="cancel-button"
-                    >
-                      Cancel
-                    </button>
-                  </>
-                ) : (
-                  <button
-                    className="reassign-btn"
-                    onClick={() => handleReassignClick(lead._id)}
-                  >
-                    Reassign
-                  </button>
-                )}
-              </td>
-            </tr>
-          ))}
-        </tbody>
+  {leads.map((lead) => (
+    <tr key={lead._id}>
+      <td>
+        <input
+          type="checkbox"
+          checked={selectedLeads.includes(lead._id)}
+          onChange={() => handleLeadSelection(lead._id)}
+          className="lead-checkbox"
+        />
+      </td>
+      <td>
+        <button
+          onClick={() => handleLeadClick(lead.leadNumber)}
+          className="lead-number-button"
+        >
+          {lead.leadNumber || ""}
+        </button>
+      </td>
+      <td>{lead.companyInfo?.companyName || ""}</td>
+      <td>{`${lead.companyInfo.leadAssignedTo?.firstName || ""} ${
+        lead.companyInfo.leadAssignedTo?.lastName || ""
+      }`}</td>
+      <td>{lead.companyInfo?.priority}</td>
+      <td>{lead.createdBy?.firstName || ""} {lead.createdBy?.lastName || ""}</td> 
+      <td>
+        {selectedLeads.includes(lead._id) && selectedLeads.length === 1 ? (
+          <>
+            <select
+              onChange={(e) => setSelectedUserId(e.target.value)}
+              value={selectedUserId}
+            >
+              <option value="">Select a user</option>
+              {activeUsers.map((user) => (
+                <option key={user._id} value={user._id}>
+                  {user.firstName} {user.lastName}
+                </option>
+              ))}
+            </select>
+            <button onClick={handleAssignLead} className="confirm-button">
+              Confirm
+            </button>
+            <button onClick={() => setSelectedLeads([])} className="cancel-button">
+              Cancel
+            </button>
+          </>
+        ) : (
+          <button className="reassign-btn" onClick={() => handleReassignClick(lead._id)}>
+            Reassign
+          </button>
+        )}
+      </td>
+    </tr>
+  ))}
+</tbody>
       </table>
 
       {/* Show LeadDetails component when a lead is selected */}
