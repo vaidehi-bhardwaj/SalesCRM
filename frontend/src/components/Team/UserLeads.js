@@ -98,9 +98,9 @@ const UserLeads = () => {
 
   return (
     <div className="user-leads-container">
-      <h2 className="user-heading">Leads for User ID: {userId}</h2>
-      <div className="table-container">
-        <table className="user-table">
+      <h2 className="user-heading">Leads</h2>
+      <div >
+        <table>
           <thead>
             <tr>
               <th>Lead Number</th>

@@ -153,8 +153,8 @@ const UserTable = () => {
         </UserModalOverlay>
       )}
 
-      <div className="table-container">
-        <table className="user-table">
+      <div >
+        <table >
           <thead>
             <tr>
               <th>First Name</th>

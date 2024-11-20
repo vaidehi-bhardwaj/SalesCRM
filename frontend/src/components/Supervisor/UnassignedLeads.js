@@ -11,8 +11,45 @@ const UnassignedLeads = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showLeadDetails, setShowLeadDetails] = useState(null); // For showing lead details
+  const [options, setOptions] = useState({
+    verticalOptions: [],
+    priorityOptions: [],
+    partnerOptions: [],
+    expiryOptions: [],
+    turnOverOptions: [],
+    leadTypeOptions: [],
+  });
+  const [filters, setFilters] = useState({
+    companyName: "",
+    cityName: "",
+    vertical: "",
+    priority: "",
+    contactExpiry: "",
+    supportPartner: "",
+    turnOver: "",
+    leadType: "",
+    allLeads: "all",
+  });
 
-  // Fetch unassigned leads
+  useEffect(() => {
+    const fetchOptions = async () => {
+      try {
+        const [optionsResponse, userNamesResponse] = await Promise.all([
+          axios.get("http://localhost:8080/api/options"),
+          axios.get("http://localhost:8080/api/users"),
+        ]);
+        setOptions((prev) => ({
+          ...prev,
+          ...optionsResponse.data,
+          leadAssignedToOptions: userNamesResponse.data,
+        }));
+      } catch (err) {
+        console.error("Error fetching options", err);
+      }
+    };
+    fetchOptions();
+  }, []);
+
   useEffect(() => {
     const fetchLeads = async () => {
       try {
@@ -22,18 +59,18 @@ const UnassignedLeads = () => {
             headers: {
               Authorization: `Bearer ${localStorage.getItem("token")}`,
             },
+            params: filters,
           }
         );
         setLeads(response.data);
       } catch (err) {
-        setError(err.response?.data?.details || "An unknown error occurred");
+        setError("Error fetching leads");
       } finally {
         setLoading(false);
       }
     };
-
     fetchLeads();
-  }, []);
+  }, [filters]);
 
   // Fetch active users
   useEffect(() => {
@@ -101,6 +138,10 @@ const UnassignedLeads = () => {
     }
   };
 
+   const handleFilterChange = (e) => {
+     setFilters({ ...filters, [e.target.name]: e.target.value });
+   };
+
   const handleReassignClick = (leadId) => {
     setSelectedLeads([leadId]); // Select a single lead for reassignment
   };
@@ -120,6 +161,112 @@ const UnassignedLeads = () => {
   return (
     <div className="unassigned">
       <h2>Unassigned Leads</h2>
+      <div className="display-filters">
+        <input
+          className="display-filter-item"
+          type="text"
+          name="companyName"
+          placeholder="Company Name"
+          value={filters.companyName}
+          onChange={handleFilterChange}
+        />
+        <input
+          className="display-filter-item"
+          type="text"
+          name="cityName"
+          placeholder="City"
+          value={filters.cityName}
+          onChange={handleFilterChange}
+        />
+        <select
+          className="display-filter-item"
+          name="vertical"
+          value={filters.vertical}
+          onChange={handleFilterChange}
+        >
+          <option value="">All Verticals</option>
+          {options.verticalOptions.map((option) => (
+            <option key={option} value={option}>
+              {option}
+            </option>
+          ))}
+        </select>
+        <select
+          className="display-filter-item"
+          name="priority"
+          value={filters.priority}
+          onChange={handleFilterChange}
+        >
+          <option value="">All Priorities</option>
+          {options.priorityOptions.map((option) => (
+            <option key={option} value={option}>
+              {option}
+            </option>
+          ))}
+        </select>
+        <select
+          className="display-filter-item"
+          name="contactExpiry"
+          value={filters.contactExpiry}
+          onChange={handleFilterChange}
+        >
+          <option value="">All Expiry Dates</option>
+          {options.expiryOptions.map((expiry) => (
+            <option key={expiry} value={expiry}>
+              {expiry}
+            </option>
+          ))}
+        </select>
+        <select
+          className="display-filter-item"
+          name="supportPartner"
+          value={filters.supportPartner}
+          onChange={handleFilterChange}
+        >
+          <option value="">All Support Partners</option>
+          {options.partnerOptions.map((partner) => (
+            <option key={partner} value={partner}>
+              {partner}
+            </option>
+          ))}
+        </select>
+        <select
+          className="display-filter-item"
+          name="turnOver"
+          value={filters.turnOver}
+          onChange={handleFilterChange}
+        >
+          <option value="">All Turnover Ranges</option>
+          {options.turnOverOptions.map((turnOver) => (
+            <option key={turnOver} value={turnOver}>
+              {turnOver}
+            </option>
+          ))}
+        </select>
+        <select
+          className="display-filter-item"
+          name="leadType"
+          value={filters.leadType}
+          onChange={handleFilterChange}
+        >
+          <option value="">All Lead Types</option>
+          {options.leadTypeOptions.map((leadType) => (
+            <option key={leadType} value={leadType}>
+              {leadType}
+            </option>
+          ))}
+        </select>
+        <select
+          className="display-filter-item"
+          name="allLeads"
+          value={filters.allLeads}
+          onChange={handleFilterChange}
+        >
+          <option value="all">All Leads</option>
+          <option value="createdByMe">Leads Created by Me</option>
+          <option value="assignedToMe">Leads Assigned to Me</option>
+        </select>
+      </div>
       <div>
         <select
           onChange={(e) => setSelectedUserId(e.target.value)}
@@ -142,71 +289,84 @@ const UnassignedLeads = () => {
       </div>
       <table>
         <thead>
-  <tr>
-    <th>Select</th>
-    <th>Lead Number</th>
-    <th>Company Name</th>
-    <th>Assigned To (Inactive)</th>
-    <th>Priority</th>
-    <th>Created By</th> 
-    <th>Reassign Lead</th>
-  </tr>
-</thead>
+          <tr>
+            <th>Select</th>
+            <th>Lead Number</th>
+            <th>Company Name</th>
+            <th>Assigned To (Inactive)</th>
+            <th>Priority</th>
+            <th>Created By</th>
+            <th>Reassign Lead</th>
+          </tr>
+        </thead>
         <tbody>
-  {leads.map((lead) => (
-    <tr key={lead._id}>
-      <td>
-        <input
-          type="checkbox"
-          checked={selectedLeads.includes(lead._id)}
-          onChange={() => handleLeadSelection(lead._id)}
-          className="lead-checkbox"
-        />
-      </td>
-      <td>
-        <button
-          onClick={() => handleLeadClick(lead.leadNumber)}
-          className="lead-number-button"
-        >
-          {lead.leadNumber || ""}
-        </button>
-      </td>
-      <td>{lead.companyInfo?.companyName || ""}</td>
-      <td>{`${lead.companyInfo.leadAssignedTo?.firstName || ""} ${
-        lead.companyInfo.leadAssignedTo?.lastName || ""
-      }`}</td>
-      <td>{lead.companyInfo?.priority}</td>
-      <td>{lead.createdBy?.firstName || ""} {lead.createdBy?.lastName || ""}</td> 
-      <td>
-        {selectedLeads.includes(lead._id) && selectedLeads.length === 1 ? (
-          <>
-            <select
-              onChange={(e) => setSelectedUserId(e.target.value)}
-              value={selectedUserId}
-            >
-              <option value="">Select a user</option>
-              {activeUsers.map((user) => (
-                <option key={user._id} value={user._id}>
-                  {user.firstName} {user.lastName}
-                </option>
-              ))}
-            </select>
-            <button onClick={handleAssignLead} className="confirm-button">
-              Confirm
-            </button>
-            <button onClick={() => setSelectedLeads([])} className="cancel-button">
-              Cancel
-            </button>
-          </>
-        ) : (
-          <button className="reassign-btn" onClick={() => handleReassignClick(lead._id)}>
-            Reassign
-          </button>
-        )}
-      </td>
-    </tr>
-  ))}
-</tbody>
+          {leads.map((lead) => (
+            <tr key={lead._id}>
+              <td>
+                <input
+                  type="checkbox"
+                  checked={selectedLeads.includes(lead._id)}
+                  onChange={() => handleLeadSelection(lead._id)}
+                  className="lead-checkbox"
+                />
+              </td>
+              <td>
+                <button
+                  onClick={() => handleLeadClick(lead.leadNumber)}
+                  className="lead-number-button"
+                >
+                  {lead.leadNumber || ""}
+                </button>
+              </td>
+              <td>{lead.companyInfo?.companyName || ""}</td>
+              <td>{`${lead.companyInfo.leadAssignedTo?.firstName || ""} ${
+                lead.companyInfo.leadAssignedTo?.lastName || ""
+              }`}</td>
+              <td>{lead.companyInfo?.priority}</td>
+              <td>
+                {lead.createdBy?.firstName || ""}{" "}
+                {lead.createdBy?.lastName || ""}
+              </td>
+              <td>
+                {selectedLeads.includes(lead._id) &&
+                selectedLeads.length === 1 ? (
+                  <>
+                    <select
+                      onChange={(e) => setSelectedUserId(e.target.value)}
+                      value={selectedUserId}
+                    >
+                      <option value="">Select a user</option>
+                      {activeUsers.map((user) => (
+                        <option key={user._id} value={user._id}>
+                          {user.firstName} {user.lastName}
+                        </option>
+                      ))}
+                    </select>
+                    <button
+                      onClick={handleAssignLead}
+                      className="confirm-button"
+                    >
+                      Confirm
+                    </button>
+                    <button
+                      onClick={() => setSelectedLeads([])}
+                      className="cancel-button"
+                    >
+                      Cancel
+                    </button>
+                  </>
+                ) : (
+                  <button
+                    className="reassign-btn"
+                    onClick={() => handleReassignClick(lead._id)}
+                  >
+                    Reassign
+                  </button>
+                )}
+              </td>
+            </tr>
+          ))}
+        </tbody>
       </table>
 
       {/* Show LeadDetails component when a lead is selected */}

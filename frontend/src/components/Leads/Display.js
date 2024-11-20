@@ -132,8 +132,8 @@ const Display = () => {
   // if (leads.length === 0) return <div>No leads found</div>;
 
   return (
-    <div>
-      <h2 className="display">My Leads (User ID: {currentUserId})</h2>
+    <div className="leads-display">
+      <h2>My Leads </h2>
       <div className="display-filters">
         <input
           className="display-filter-item"

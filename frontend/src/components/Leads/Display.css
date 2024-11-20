@@ -5,7 +5,16 @@
   padding: 20px;
   font-family: Arial, sans-serif;
 }
+.leads-display{
+  padding: 20px;
+  font-family: Arial, sans-serif;
+}
 
+.leads-display-heading{
+  color: #333;
+  font-size: 1.8em;
+  font-weight: bold;
+}
 table {
   width: 100%;
   border-collapse: collapse;
@@ -71,9 +80,7 @@ display {
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
-  padding: 10px;
-  margin-top: 20px;
-  margin-left: 20px;
+ margin-bottom: 10px;
 }
 
 .display-filter-item {

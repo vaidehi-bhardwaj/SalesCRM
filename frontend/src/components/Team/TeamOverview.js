@@ -37,8 +37,8 @@ const TeamOverview = () => {
     <div className="user-management-container">
       <h1 className="user-heading">Team Overview</h1>
       {error && <p className="error-message">{error}</p>}
-      <div className="table-container">
-        <table className="user-table team-overview-table">
+      <div>
+        <table>
           <thead>
             <tr>
               <th>First Name</th>

@@ -1,4 +1,5 @@
 /* Modal overlay background */
+
 .user-modal-overlay {
   position: fixed;
   top: 0;
@@ -149,11 +150,11 @@ margin-top:10px;
 .filters{
   align-items: center;
   margin-top:30px;
- padding: 10px;
+
 display: flex;
 flex-direction: row;
 gap:10px;
-margin-left:25px;
+
 }
 
 .create-user-btn{

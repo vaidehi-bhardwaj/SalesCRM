@@ -1,14 +1,14 @@
 /* Team Overview Container */
 .user-management-container {
   padding: 20px;
-  background-color: #f9f9f9; /* Light background for better contrast */
+  font-family: Arial, sans-serif;
 }
 
 /* Heading */
 .user-heading {
-  font-size: 22px;
-  margin-bottom: 20px;
-  color: #2c3e50; /* Dark blue color for heading */
+ color: #333;
+  font-size: 1.8em;
+  font-weight: bold;
 }
 
 /* Error Message */
@@ -18,11 +18,7 @@
 }
 
 /* Table Container */
-.table-container {
-  margin-top: 10px;
-  overflow-x: auto; /* Allow horizontal scrolling for small screens */
-  padding: 10px;
-}
+
 
 /* Table Styling */
 .user-table {
