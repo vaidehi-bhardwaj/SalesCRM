@@ -122,8 +122,8 @@ const Display = () => {
 
   // Helper function to get phone numbers
   const getPhoneNumbers = (lead) => {
-    const phone1 = lead.companyInfo?.["Generic Phone 1"] || "";
-    const phone2 = lead.companyInfo?.["Generic Phone 2"] || "";
+    const phone1 = lead.companyInfo?.genericPhone1 || "";
+    const phone2 = lead.companyInfo?.genericPhone2 || "";
     return [phone1, phone2].filter(Boolean).join(", ") || "";
   };
 
