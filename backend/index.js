@@ -88,80 +88,112 @@ const checkUserStatus = async (req, res, next) => {
 // POST lead data with file upload
 app.post("/api/leads", upload.single("file"), async (req, res) => {
   try {
+    // Parse the incoming data
     const parsedData = JSON.parse(req.body.data);
 
+    // Destructure the required fields from parsedData
+    const {
+      company,
+      contact,
+      itLandscape,
+      description,
+      selectedOption,
+      radioValue,
+    } = parsedData;
+
+    // List of required fields for validation (from frontend)
+    const requiredFields = [
+      "leadType",
+      "companyName",
+      "website",
+      "city",
+      "state",
+      "country",
+      "turnOverINR",
+      "vertical",
+      "leadAssignedTo",
+      "bdm",
+      "leadStatus",
+      "priority",
+      "nextAction",
+      "dateField",
+      "leadUsable",
+      "reason",
+    ];
+
+    // Validate the required fields
+    const missingFields = [];
+    requiredFields.forEach((field) => {
+      if (!company[field] || company[field].toString().trim() === "") {
+        missingFields.push(field);
+      }
+    });
+
+    // If any required fields are missing, return a 400 error with the missing fields
+    if (missingFields.length > 0) {
+      return res.status(400).json({
+        error: "Missing required fields",
+        missingFields,
+      });
+    }
+
+    // Proceed with creating the lead
     const leadData = {
       companyInfo: {
-        leadType: parsedData.company.leadType,
-        genericEmail1: parsedData.company.genericEmail1,
-        vertical: parsedData.company.vertical,
-        companyName: parsedData.company.companyName,
-        genericEmail2: parsedData.company.genericEmail2,
-        leadAssignedTo: new mongoose.Types.ObjectId(
-          parsedData.company.leadAssignedTo
-        ),
-        website: parsedData.company.website,
-        genericPhone1: parsedData.company.genericPhone1,
-        bdm: parsedData.company.bdm,
-        address: parsedData.company.address,
-        genericPhone2: parsedData.company.genericPhone2,
-        leadStatus: parsedData.company.leadStatus,
-        city: parsedData.company.city,
-        leadSource: parsedData.company.leadSource,
-        priority: parsedData.company.priority,
-        state: parsedData.company.state,
-        totalNoOfOffices: Number(parsedData.company.totalNoOfOffices),
-        nextAction: parsedData.company.nextAction,
-        country: parsedData.company.country,
-        turnOverINR: parsedData.company.turnOverINR,
-        leadUsable: parsedData.company.leadUsable,
-        employeeCount: parsedData.company.employeeCount,
-        totalNoOfManufUnits: Number(parsedData.company.totalNoOfManufUnits),
-        reason: parsedData.company.reason,
-        aboutTheCompany: parsedData.company.aboutTheCompany,
-        dateField: parsedData.company.dateField,
+        leadType: company.leadType,
+        companyName: company.companyName,
+        website: company.website,
+        city: company.city,
+        state: company.state,
+        country: company.country,
+        turnOverINR: company.turnOverINR,
+        vertical: company.vertical,
+        leadAssignedTo: new mongoose.Types.ObjectId(company.leadAssignedTo),
+        bdm: company.bdm,
+        leadStatus: company.leadStatus,
+        priority: company.priority,
+        nextAction: company.nextAction,
+        dateField: company.dateField,
+        leadUsable: company.leadUsable,
+        reason: company.reason,
+        totalNoOfOffices: Number(company.totalNoOfOffices) || 0, // Optional with default value
+        totalNoOfManufUnits: Number(company.totalNoOfManufUnits) || 0, // Optional with default value
+        employeeCount: company.employeeCount || "",
+        aboutTheCompany: company.aboutTheCompany || "",
       },
       contactInfo: {
         it: {
-          name: parsedData.contact.itName,
-          dlExt: parsedData.contact.itDlExt,
-          designation: parsedData.contact.itDesignation,
-          mobile: parsedData.contact.itMobile,
-          email: parsedData.contact.itEmail,
-          personalEmail: parsedData.contact.itPersonalEmail,
+          name: contact.itName,
+          mobile: contact.itMobile,
+          email: contact.itEmail,
         },
         finance: {
-          name: parsedData.contact.financeName,
-          dlExt: parsedData.contact.financeDlExt,
-          designation: parsedData.contact.financeDesignation,
-          mobile: parsedData.contact.financeMobile,
-          email: parsedData.contact.financeEmail,
-          personalEmail: parsedData.contact.financePersonalEmail,
+          name: contact.financeName,
+          mobile: contact.financeMobile,
+          email: contact.financeEmail,
         },
         businessHead: {
-          name: parsedData.contact.businessHeadName,
-          dlExt: parsedData.contact.businessHeadDlExt,
-          designation: parsedData.contact.businessHeadDesignation,
-          mobile: parsedData.contact.businessHeadMobile,
-          email: parsedData.contact.businessHeadEmail,
-          personalEmail: parsedData.contact.businessHeadPersonalEmail,
+          name: contact.businessHeadName,
+          mobile: contact.businessHeadMobile,
+          email: contact.businessHeadEmail,
         },
       },
       itLandscape: {
-        netNew: parsedData.itLandscape.netNew,
-        SAPInstalledBase: parsedData.itLandscape.SAPInstalledBase,
+        netNew: itLandscape.netNew,
+        SAPInstalledBase: itLandscape.SAPInstalledBase,
       },
       descriptions: [
         {
-          description: parsedData.description,
-          selectedOption: parsedData.selectedOption,
-          radioValue: parsedData.radioValue,
+          description,
+          selectedOption,
+          radioValue,
           addedBy: new mongoose.Types.ObjectId(parsedData.createdBy),
         },
       ],
       createdBy: new mongoose.Types.ObjectId(parsedData.createdBy),
     };
 
+    // Add file if provided
     if (req.file) {
       leadData.descriptions[0].file = {
         data: req.file.buffer,
@@ -170,16 +202,21 @@ app.post("/api/leads", upload.single("file"), async (req, res) => {
       };
     }
 
+    // Save the lead
     const lead = new Lead(leadData);
     const savedLead = await lead.save();
 
+    // Populate the saved lead with user information
     await savedLead.populate("descriptions.addedBy", "firstName");
+
+    // Respond with success message
     res.status(201).json({
       success: true,
       message: "Lead created successfully",
       leadNumber: savedLead.leadNumber,
     });
   } catch (error) {
+    console.error("Error saving lead:", error.message);
     res.status(500).json({
       success: false,
       error: "Error creating lead",
@@ -187,6 +224,7 @@ app.post("/api/leads", upload.single("file"), async (req, res) => {
     });
   }
 });
+
 
 
 // Helper function to safely convert string to ObjectId

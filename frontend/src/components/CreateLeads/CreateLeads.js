@@ -96,28 +96,21 @@ const CreateLeads = () => {
     fetchOptions();
   }, []);
 
-  useEffect(() => {
-    const userIdFromStorage = localStorage.getItem("userId");
-    if (userIdFromStorage) {
-      setUserId(userIdFromStorage);
-      setFormData((prevData) => ({
-        ...prevData,
-        createdBy: userIdFromStorage,
-      }));
-    }
-  }, []);
+useEffect(() => {
+  const userIdFromStorage = localStorage.getItem("userId");
+  if (userIdFromStorage) {
+    setUserId(userIdFromStorage);
+    setFormData((prevData) => ({
+      ...prevData,
+      createdBy: userIdFromStorage,
+    }));
+  }
+}, []);
+
 
   const handleChange = useCallback((e, section, index) => {
     const { name, value } = e.target;
-    const parsedValue = ["totalNoOfOffices", "totalNoOfManufUnits"].includes(
-      name
-    )
-      ? Number(value)
-      : value;
-    setFormData((prevData) => ({
-      ...prevData,
-      [section]: { ...prevData[section], [name]: parsedValue },
-    }));
+  
 
     setFormData((prevData) => {
       if (section === "additionalSections") {
@@ -174,83 +167,118 @@ const CreateLeads = () => {
     setErrors({});
   }, []);
 
-  const validateForm = useCallback(() => {
-    const newErrors = {};
-    const validateSection = (config, data, section) => {
-      config.flat().forEach((field) => {
-        if (field.required && !data[field.name]?.toString().trim()) {
-          newErrors[field.name] = `${field.label} is required`;
-        }
-        if (field.datePicker?.required && !data[field.datePicker.name]) {
-          newErrors[
-            field.datePicker.name
-          ] = `${field.datePicker.label} is required`;
-        }
-      });
+const validateForm = useCallback(() => {
+  const newErrors = {};
+ const numericFields = [
+   "totalNoOfOffices",
+   "totalNoOfManufUnits",
+   "opportunityValue1",
+   "opportunityValue2",
+   "opportunityValue3",
+   "totalProjectCost",
+ ];
+
+
+  const validateNumericField = (fieldName, value, label) => {
+    if (value && isNaN(value)) {
+      newErrors[fieldName] = `${label} should be a numeric value`;
+    }
+  };
+
+  const validateField = (fieldName, value, label) => {
+    if (!value?.toString().trim()) {
+      newErrors[fieldName] = `${label} is required`;
+    }
+  };
+
+  // Validate required fields in Company Information
+  const company = formData.company;
+  validateField("leadType", company.leadType, "Lead Type");
+  validateField("companyName", company.companyName, "Company Name");
+  validateField("website", company.website, "Website");
+  validateField("city", company.city, "City");
+  validateField("state", company.state, "State");
+  validateField("country", company.country, "Country");
+  validateField("turnOverINR", company.turnOverINR, "Turnover (INR)");
+  validateField("vertical", company.vertical, "Vertical");
+  validateField("leadAssignedTo", company.leadAssignedTo, "Lead Assigned To");
+  validateField("bdm", company.bdm, "BDM");
+  validateField("leadStatus", company.leadStatus, "Lead Status");
+  validateField("priority", company.priority, "Priority");
+  validateField("nextAction", company.nextAction, "Next Action");
+  validateField("dateField", company.dateField, "Date Field");
+  validateField("leadUsable", company.leadUsable, "Lead Usable");
+  validateField("reason", company.reason, "Reason");
+
+  // Validate IT Landscape (conditional logic)
+  const netNew = formData.itLandscape.netNew;
+  if (netNew.usingERP === "Yes") {
+    validateField("ifYesWhichOne", netNew.ifYesWhichOne, "If Yes, Which One");
+  } else if (netNew.usingERP === "No") {
+    validateField("ifNoWhy", netNew.ifNoWhy, "If No, Why");
+  }
+  numericFields.forEach((field) => {
+    const value =
+      company[field] ||
+      formData.itLandscape.netNew[field] ||
+      formData.itLandscape.SAPInstalledBase[field];
+    validateNumericField(field, value, field.replace(/([A-Z])/g, " $1").trim()); // Converts camelCase to readable format
+  });
+  setErrors(newErrors);
+
+  // Display an alert if there are validation errors
+  if (Object.keys(newErrors).length > 0) {
+    alert("Please fill in all required fields.");
+    return false;
+  }
+
+  return true;
+}, [formData]);
+
+
+const handleSubmit = async (e) => {
+  e.preventDefault();
+
+  // Validate the form
+  if (!validateForm()) {
+    return; // Exit if validation fails
+  }
+
+  try {
+    const formDataToSend = new FormData();
+    const dataToSend = {
+      ...formData,
+      createdBy: userId || null,
+      company: {
+        ...formData.company,
+        leadNumber: formData.company.leadNumber
+          ? parseInt(formData.company.leadNumber, 10)
+          : undefined,
+      },
     };
+    formDataToSend.append("data", JSON.stringify(dataToSend));
+    if (file) {
+      formDataToSend.append("file", file);
+    }
 
-    validateSection(companyFormConfig, formData.company, "company");
-    contactFormConfig.forEach((role) => {
-      validateSection(role.fields, formData.contact, "contact");
-    });
-    Object.entries(itLandscapeConfig).forEach(([section, fields]) => {
-      validateSection(
-        fields,
-        formData.itLandscape[section],
-        `itLandscape.${section}`
-      );
-    });
+    const response = await axios.post(
+      "http://localhost:8080/api/leads",
+      formDataToSend,
+      {
+        headers: { "Content-Type": "multipart/form-data" },
+      }
+    );
 
-    if (!formData.description.trim())
-      newErrors.description = "Description is required";
-    if (!file) newErrors.file = "File is required";
-    if (!formData.selectedOption)
-      newErrors.selectedOption = "Present Conversation Level is required";
-    if (!formData.radioValue)
-      newErrors.radioValue = "Mailer Shared selection is required";
+    alert(
+      `Lead created successfully! Lead Number: ${response.data.leadNumber}`
+    );
+    resetForm();
+  } catch (error) {
+    console.error("Error saving data", error);
+    alert("Error saving data. Please try again.");
+  }
+};
 
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  }, [formData, file]);
-
- const handleSubmit = async (e) => {
-   e.preventDefault();
-   if (validateForm()) {
-     try {
-       const formDataToSend = new FormData();
-       const dataToSend = {
-         ...formData,
-         createdBy: userId || null,
-         company: {
-           ...formData.company,
-           leadNumber: formData.company.leadNumber
-             ? parseInt(formData.company.leadNumber, 10)
-             : undefined,
-         },
-       };
-       formDataToSend.append("data", JSON.stringify(dataToSend));
-       if (file) {
-         formDataToSend.append("file", file);
-       }
-
-       const response = await axios.post(
-         "http://localhost:8080/api/leads",
-         formDataToSend,
-         {
-           headers: { "Content-Type": "multipart/form-data" },
-         }
-       );
-
-       alert(
-         `Lead created successfully! Lead Number: ${response.data.leadNumber}`
-       );
-       resetForm();
-     } catch (error) {
-       console.error("Error saving data", error);
-       alert("Error saving data. Please try again.");
-     }
-   }
- };
 
   return (
     <div>
@@ -387,7 +415,7 @@ const CreateLeads = () => {
                 name="description"
                 value={formData.description}
                 onChange={(e) => handleChange(e)}
-                required
+           
               />
               {errors.description && (
                 <span className="error">{errors.description}</span>
@@ -403,7 +431,7 @@ const CreateLeads = () => {
                 name="file"
                 accept=".pdf,.doc,.docx"
                 onChange={(e) => setFile(e.target.files[0])}
-                required
+              
                 ref={fileInputRef}
               />
               {errors.file && <span className="error">{errors.file}</span>}
@@ -442,7 +470,7 @@ const CreateLeads = () => {
                   value="yes"
                   checked={formData.radioValue === "yes"}
                   onChange={(e) => handleChange(e)}
-                  required
+             
                 />
                 Yes
               </label>
